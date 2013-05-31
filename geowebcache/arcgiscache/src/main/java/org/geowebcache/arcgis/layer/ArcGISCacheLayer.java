@@ -30,6 +30,7 @@ import org.geowebcache.grid.OutsideCoverageException;
 import org.geowebcache.io.FileResource;
 import org.geowebcache.io.Resource;
 import org.geowebcache.layer.AbstractTileLayer;
+import org.geowebcache.layer.meta.WMSStyle;
 import org.geowebcache.mime.MimeException;
 import org.geowebcache.mime.MimeType;
 
@@ -345,7 +346,7 @@ public class ArcGISCacheLayer extends AbstractTileLayer {
      * @see org.geowebcache.layer.TileLayer#getStyles()
      */
     @Override
-    public String getStyles() {
+    public List<WMSStyle> getStyles() {
         return null;
     }
 

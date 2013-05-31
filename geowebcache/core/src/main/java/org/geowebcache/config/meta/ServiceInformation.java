@@ -39,6 +39,8 @@ public class ServiceInformation implements Serializable{
 
     private String providerSite;
 
+    private INSPIREAdditionalInformation INSPIREAdditionalInformation;
+    
     /**
      * @return the title
      */
@@ -149,6 +151,21 @@ public class ServiceInformation implements Serializable{
      */
     public void setServiceProvider(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
+    }
+
+    /**
+     * @return the INSPIREAdditionalInformation
+     */
+    public INSPIREAdditionalInformation getINSPIREServiceAdditionalInformation() {
+        return INSPIREAdditionalInformation;
+    }
+
+    /**
+     * @param INSPIREAdditionalInformation the INSPIREAdditionalInformation to set
+     */
+    public void setINSPIREServiceAdditionalInformation(
+            INSPIREAdditionalInformation serviceAdditionalInformation) {
+        this.INSPIREAdditionalInformation = serviceAdditionalInformation;
     }
 
 }

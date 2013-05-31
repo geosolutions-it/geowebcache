@@ -20,6 +20,7 @@ package org.geowebcache.config;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,8 +55,10 @@ import org.geowebcache.grid.GridSubsetFactory;
 import org.geowebcache.grid.SRS;
 import org.geowebcache.layer.TileLayer;
 import org.geowebcache.layer.meta.LayerMetaInformation;
+import org.geowebcache.layer.meta.WMSStyle;
 import org.geowebcache.layer.wms.WMSHttpHelper;
 import org.geowebcache.layer.wms.WMSLayer;
+import org.opengis.util.InternationalString;
 
 public class GetCapabilitiesConfiguration implements Configuration {
     private static Log log = LogFactory
@@ -178,48 +181,74 @@ public class GetCapabilitiesConfiguration implements Configuration {
 
     private List<TileLayer> getLayers(WebMapServer wms, String wmsUrl, String urlVersion)
             throws GeoWebCacheException {
-        List<TileLayer> layers = new LinkedList<TileLayer>();
-
         WMSCapabilities capabilities = wms.getCapabilities();
         if (capabilities == null) {
             throw new ConfigurationException("Unable to get capabitilies from " + wmsUrl);
         }
 
+        final List<TileLayer> layers = new LinkedList<TileLayer>();
         WMSHttpHelper sourceHelper = new WMSHttpHelper();
 
         List<Layer> layerList = capabilities.getLayerList();
-        Iterator<Layer> layerIter = layerList.iterator();
-
-        while (layerIter.hasNext()) {
-            Layer layer = layerIter.next();
+        for(Layer layer:layerList) {
             String name = layer.getName();
-            String stylesStr = "";
+            final List<WMSStyle> wmsStyles= new ArrayList<WMSStyle>();
 
             String title = layer.getTitle();
 
             String description = layer.get_abstract();
 
+            // meta information
             LayerMetaInformation layerMetaInfo = null;
             if (title != null || description != null) {
-                layerMetaInfo = new LayerMetaInformation(title, description, null, null);
+                // keywords
+                final String[] keywords = layer.getKeywords();
+                final List<String> keys= keywords!=null&& keywords.length>0?new ArrayList<String>(Arrays.asList(keywords)):null;
+                layerMetaInfo = new LayerMetaInformation(title, description, keys, null,null);
             }
             boolean queryable = layer.isQueryable();
 
             if (name != null) {
                 List<StyleImpl> styles = layer.getStyles();
 
-                StringBuffer buf = new StringBuffer();
                 if (styles != null) {
-                    Iterator<StyleImpl> iter = styles.iterator();
-                    boolean hasOne = false;
-                    while (iter.hasNext()) {
-                        if (hasOne) {
-                            buf.append(",");
+                    boolean default_=false;
+                    for(StyleImpl style:styles){
+                        final WMSStyle wmsStyle= new WMSStyle();
+                        wmsStyle.setIdentifier(style.getName());
+                        final InternationalString title2 = style.getTitle();
+                        final InternationalString abstract2 = style.getAbstract();
+                        if(title2!=null&&title2.length()>0){
+                            wmsStyle.setDescription(title2.toString());
+                        } else if(abstract2!=null&&abstract2.length()>0){
+                            wmsStyle.setDescription(abstract2.toString());
                         }
-                        buf.append(iter.next().getName());
-                        hasOne = true;
+                        // first one as default
+                        if(!default_){
+                            default_=true;
+                            wmsStyle.setDefaultStyle(true);
+                        }
+                        
+                        // get the first legend, this is somewhat arbitrary but that's ok
+                        if(style.getLegendURLs()!=null&&!style.getLegendURLs().isEmpty()) {
+                            Object legendURL = style.getLegendURLs().get(0);
+                            if(legendURL instanceof URL){
+                              legendURL=((URL) legendURL).toString();  
+                            } 
+                            if(legendURL instanceof String){
+                                String[] splits = ((String) legendURL).split("&");
+                                // look for format
+                                if(splits!=null){
+                                    for(String elem:splits){
+                                        if(elem.toLowerCase().startsWith("format")&&elem.contains("=")){
+                                            wmsStyle.setLegendMimeType(elem.substring(elem.indexOf("=")+1));
+                                        }
+                                    }
+                                }
+                            }
+                            
+                        }
                     }
-                    stylesStr = buf.toString();
                 }
 
                 double minX = layer.getLatLonBoundingBox().getMinX();
@@ -246,7 +275,7 @@ public class GetCapabilitiesConfiguration implements Configuration {
 
                 WMSLayer wmsLayer = null;
                 try {
-                    wmsLayer = getLayer(name, wmsUrls, bounds4326, bounds3785, stylesStr,
+                    wmsLayer = getLayer(name, wmsUrls, bounds4326, bounds3785, wmsStyles,
                             queryable, layer.getBoundingBoxes(), paramFilters);
                 } catch (GeoWebCacheException gwc) {
                     log.error("Error creating " + layer.getName() + ": " + gwc.getMessage());
@@ -278,7 +307,7 @@ public class GetCapabilitiesConfiguration implements Configuration {
     }
 
     private WMSLayer getLayer(String name, String[] wmsurl, BoundingBox bounds4326,
-            BoundingBox bounds3785, String stylesStr, boolean queryable,
+            BoundingBox bounds3785, List<WMSStyle> styles, boolean queryable,
             Map<String, CRSEnvelope> additionalBounds, List<ParameterFilter> paramFilters)
             throws GeoWebCacheException {
 
@@ -335,8 +364,8 @@ public class GetCapabilitiesConfiguration implements Configuration {
 
         int[] metaWidthHeight = { Integer.parseInt(metaStrings[0]),
                 Integer.parseInt(metaStrings[1]) };
-
-        return new WMSLayer(name, wmsurl, stylesStr, name, mimeFormats, grids, paramFilters,
+       
+        return new WMSLayer(name, wmsurl, styles, name, mimeFormats, grids, paramFilters,
                 metaWidthHeight, this.vendorParameters, queryable);
     }
 

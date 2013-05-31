@@ -24,12 +24,18 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.geowebcache.GeoWebCacheException;
-
+/**
+ * 
+ * @author Simone Giannecchini, GeoSOlutions SAS
+ * TODO checks on authorities
+ */
 public class SRS implements Comparable<SRS> {
 
     private static Map<Integer, SRS> list = new ConcurrentHashMap<Integer, SRS>();
 
     private static final SRS EPSG4326 = new SRS(4326);
+    
+    private static final SRS CRS84 = new SRS(84,null,"CRS");
 
     /**
      * The EPSG says EPSG:3857 is the identifier for web mercator. ArcGIS 10 says either of
@@ -48,6 +54,8 @@ public class SRS implements Comparable<SRS> {
             102113, 102100)));
 
     private int number;
+    
+    transient private String authority;
 
     private transient List<Integer> aliases;
 
@@ -60,8 +68,13 @@ public class SRS implements Comparable<SRS> {
     }
 
     private SRS(int epsgNumber, List<Integer> aliases) {
+        this(epsgNumber, aliases, "EPSG");
+    }
+    
+    private SRS(int epsgNumber, List<Integer> aliases,String authority) {
         this.number = epsgNumber;
         this.aliases = aliases;
+        this.authority=authority;
         readResolve();
     }
 
@@ -74,17 +87,21 @@ public class SRS implements Comparable<SRS> {
     }
 
     /**
-     * Returns an SRS object for the given epsg code.
+     * Returns an SRS object for the given code.
      * <p>
      * If an SRS for this code already exists, it's returned. Otherwise a registered SRS is looked
      * up that has an alias defined for the given code, and if found the alias is returned. If no
      * SRS is registered nor an alias is found, a new SRS for this code is registered and returned.
      * 
-     * @param epsgCode
+     * <p>
+     * As a peculiar case 84 mas to CRS:84.
+     * 
+     * @param srsCode
      * @return
+     * TODO threadsafety!!!
      */
-    public static SRS getSRS(final int epsgCode) {
-        final Integer code = Integer.valueOf(epsgCode);
+    public static SRS getSRS(final int srsCode) {
+        final Integer code = Integer.valueOf(srsCode);
         final SRS existing = list.get(code);
 
         if (existing != null) {
@@ -97,17 +114,46 @@ public class SRS implements Comparable<SRS> {
             }
         }
 
-        return new SRS(epsgCode);
+        return new SRS(srsCode);
     }
-
-    public static SRS getSRS(String epsgStr) throws GeoWebCacheException {
-        final String crsAuthPrefix = "EPSG:";
-        if (epsgStr.substring(0, 5).equalsIgnoreCase(crsAuthPrefix)) {
-            int epsgNumber = Integer.parseInt(epsgStr.substring(5, epsgStr.length()));
-            return getSRS(epsgNumber);
-        } else {
-            throw new GeoWebCacheException("Can't parse " + epsgStr + " as SRS string.");
+    
+    /**
+     * Returns an SRS object for the given code. The code may contain an authority which is going to be checked internally!
+     * <p>
+     * If an SRS for this code already exists, it's returned. Otherwise a registered SRS is looked
+     * up that has an alias defined for the given code, and if found the alias is returned. If no
+     * SRS is registered nor an alias is found, a new SRS for this code is registered and returned.
+     * 
+     * <p>
+     * As a peculiar case 84 mas to CRS:84.
+     * 
+     * @param srsCode
+     * @return
+     * TODO threadsafety!!!
+     */
+    public static SRS getSRS(String srsString) throws GeoWebCacheException {
+        if(srsString==null){
+            throw new NullPointerException("Unable to parse null CRS");
         }
+        if(srsString.length()<=0){
+            throw new NullPointerException("Unable to parse empty CRS");
+        }        
+        final int index=srsString.indexOf(":");
+        String authority=null;
+        if (index>=0) {
+            authority=srsString.substring(0,index);
+            srsString = srsString.substring(index+1, srsString.length());
+        }
+        
+        int code = Integer.parseInt(srsString);
+        SRS tmp = getSRS(code);
+        if(tmp==null){
+            throw new IllegalStateException("Unable to parse srs "+srsString);
+        }
+        if(tmp.getAuthority()!=null&&!tmp.getAuthority().equalsIgnoreCase(authority)){
+            throw new IllegalStateException("Unable to parse srs "+srsString+"; Wrong authority retrieved!");
+        }
+        return tmp;
     }
 
     /**
@@ -147,7 +193,7 @@ public class SRS implements Comparable<SRS> {
     }
 
     public String toString() {
-        return "EPSG:" + Integer.toString(number);
+        return authority+":" + Integer.toString(number);
     }
 
     public static SRS getEPSG4326() {
@@ -156,6 +202,10 @@ public class SRS implements Comparable<SRS> {
 
     public static SRS getEPSG3857() {
         return EPSG3857;
+    }
+    
+    public static SRS getCRS84() {
+        return CRS84;
     }
 
     public static SRS getEPSG900913() {
@@ -167,5 +217,12 @@ public class SRS implements Comparable<SRS> {
      */
     public int compareTo(SRS other) {
         return number - other.number;
+    }
+
+    /**
+     * @return the authority
+     */
+    public String getAuthority() {
+        return authority;
     }
 }

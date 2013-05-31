@@ -46,6 +46,7 @@ import org.geowebcache.grid.SRS;
 import org.geowebcache.io.ByteArrayResource;
 import org.geowebcache.io.Resource;
 import org.geowebcache.layer.meta.LayerMetaInformation;
+import org.geowebcache.layer.meta.WMSStyle;
 import org.geowebcache.layer.updatesource.UpdateSourceDefinition;
 import org.geowebcache.mime.FormatModifier;
 import org.geowebcache.mime.MimeType;
@@ -199,7 +200,7 @@ public abstract class TileLayer {
      * 
      * @return the styles configured for the layer, may be null
      */
-    public abstract String getStyles();
+    public abstract List<WMSStyle> getStyles();
 
     /**
      * 
@@ -642,7 +643,6 @@ public abstract class TileLayer {
                 } catch (IOException ioe) {
                     log.error("Unable to write image tile to " + "ByteArrayOutputStream: "
                             + ioe.getMessage());
-                    ioe.printStackTrace();
                 }
             }
         }

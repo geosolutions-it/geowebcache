@@ -25,20 +25,23 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
+import javax.imageio.spi.ImageReaderSpi;
+import javax.imageio.spi.ImageWriterSpi;
 import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.ImageOutputStream;
 import javax.imageio.stream.MemoryCacheImageOutputStream;
 import javax.media.jai.JAI;
 import javax.media.jai.PlanarImage;
 import javax.media.jai.RenderedOp;
-import javax.media.jai.operator.CropDescriptor;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -76,7 +79,7 @@ public class MetaTile implements TileResponseReceiver {
     }
 
     // buffer for storing the metatile, if it is an image
-    protected RenderedImage metaTileImage = null;
+    protected BufferedImage metaTileImage = null;
 
     protected int[] gutter = new int[4]; // L,B,R,T in pixels
 
@@ -118,6 +121,10 @@ public class MetaTile implements TileResponseReceiver {
 
     private List<RenderedImage> disposableImages;
 
+    private ImageReaderSpi readerSPI;
+
+    private ImageWriterSpi writerSPI;
+
     /**
      * The the request format is the format used for the request to the backend.
      * 
@@ -149,6 +156,17 @@ public class MetaTile implements TileResponseReceiver {
         int tileHeight = gridSubset.getTileHeight();
         int tileWidth = gridSubset.getTileWidth();
         this.tiles = createTiles(tileHeight, tileWidth);
+        
+        String reqMime=this.formatModifier!=null?this.formatModifier.getRequestFormat().getMimeType():responseFormat.getMimeType();
+        final Iterator<ImageReader> it = ImageIO.getImageReadersByMIMEType(reqMime);
+        if(!it.hasNext()){
+            throw new RuntimeException("");
+        }
+        this.readerSPI=it.next().getOriginatingProvider();
+        
+        // TODO should we recycle the writers ?
+        // GR: it'd be only a 2% perf gain according to profiler
+        writerSPI = javax.imageio.ImageIO.getImageWritersByMIMEType(responseFormat.getMimeType()).next().getOriginatingProvider();
     }
 
     /***
@@ -253,14 +271,22 @@ public class MetaTile implements TileResponseReceiver {
         Assert.notNull(buffer, "WMSMetaTile.setImageBytes() received null");
         Assert.isTrue(buffer.getSize() > 0, "WMSMetaTile.setImageBytes() received empty contents");
 
+        ImageReader reader =null;
         try {
-            ImageInputStream imgStream;
-            imgStream = new ResourceImageInputStream(((ByteArrayResource) buffer).getInputStream());
-            RenderedImage metaTiledImage = ImageIO.read(imgStream);// read closes the stream for us
-            setImage(metaTiledImage);
+            reader=readerSPI.createReaderInstance();
+            ImageInputStream imgStream = new ResourceImageInputStream(((ByteArrayResource) buffer).getInputStream());
+            reader.setInput(imgStream);
+            BufferedImage metaTiledImage_ =reader.read(0);// read closes the stream for us
+            setImage(metaTiledImage_);
         } catch (IOException ioe) {
             throw new GeoWebCacheException("WMSMetaTile.setImageBytes() "
                     + "failed on ImageIO.read(byte[" + buffer.getSize() + "])", ioe);
+        } finally{
+            try{
+                reader.dispose();
+            }catch (Exception e) {
+                // TODO: handle exception
+            }
         }
         if (metaTileImage == null) {
             throw new GeoWebCacheException(
@@ -268,7 +294,7 @@ public class MetaTile implements TileResponseReceiver {
         }
     }
 
-    public void setImage(RenderedImage metaTiledImage) {
+    public void setImage(BufferedImage metaTiledImage) {
         this.metaTileImage = metaTiledImage;
     }
 
@@ -298,35 +324,35 @@ public class MetaTile implements TileResponseReceiver {
         return tiles;
     }
 
-    /**
-     * Extracts a single tile from the metatile.
-     * 
-     * @param minX
-     *            left pixel index to crop the meta tile at
-     * @param minY
-     *            top pixel index to crop the meta tile at
-     * @param tileWidth
-     *            width of the tile
-     * @param tileHeight
-     *            height of the tile
-     * @return a rendered image of the specified meta tile region
-     */
-    public RenderedImage createTile(final int minX, final int minY, final int tileWidth,
-            final int tileHeight) {
-
-        // do a crop, and then turn it into a buffered image so that we can release
-        // the image chain
-        RenderedOp cropped = CropDescriptor.create(metaTileImage, Float.valueOf(minX),
-                Float.valueOf(minY), Float.valueOf(tileWidth), Float.valueOf(tileHeight), NO_CACHE);
-        if (nativeAccelAvailable()) {
-            log.trace("created cropped tile");
-            return cropped;
-        }
-        log.trace("native accel not available, returning buffered image");
-        BufferedImage tile = cropped.getAsBufferedImage();
-        disposePlanarImageChain(cropped, new HashSet<PlanarImage>());
-        return tile;
-    }
+//    /**
+//     * Extracts a single tile from the metatile.
+//     * 
+//     * @param minX
+//     *            left pixel index to crop the meta tile at
+//     * @param minY
+//     *            top pixel index to crop the meta tile at
+//     * @param tileWidth
+//     *            width of the tile
+//     * @param tileHeight
+//     *            height of the tile
+//     * @return a rendered image of the specified meta tile region
+//     */
+//    public BufferedImage createTile(final int minX, final int minY, final int tileWidth,
+//            final int tileHeight) {
+//
+//        // do a crop, and then turn it into a buffered image so that we can release
+//        // the image chain
+//        RenderedOp cropped = CropDescriptor.create(metaTileImage, Float.valueOf(minX),
+//                Float.valueOf(minY), Float.valueOf(tileWidth), Float.valueOf(tileHeight), NO_CACHE);
+//        if (nativeAccelAvailable()) {
+//            log.trace("created cropped tile");
+//            return cropped;
+//        }
+//        log.trace("native accel not available, returning buffered image");
+//        BufferedImage tile = cropped.getAsBufferedImage();
+//        disposePlanarImageChain(cropped, new HashSet<PlanarImage>());
+//        return tile;
+//    }
 
     protected boolean nativeAccelAvailable() {
         return NATIVE_JAI_AVAILABLE;
@@ -348,7 +374,6 @@ public class MetaTile implements TileResponseReceiver {
         if (tiles == null) {
             return false;
         }
-        String format = responseFormat.getInternalName();
 
         if (log.isDebugEnabled()) {
             log.debug("Thread: " + Thread.currentThread().getName() + " writing: " + tileIdx);
@@ -356,7 +381,7 @@ public class MetaTile implements TileResponseReceiver {
 
         // TODO should we recycle the writers ?
         // GR: it'd be only a 2% perf gain according to profiler
-        ImageWriter writer = javax.imageio.ImageIO.getImageWritersByFormatName(format).next();
+        ImageWriter writer = writerSPI.createWriterInstance();
         ImageWriteParam param = writer.getDefaultWriteParam();
 
         if (this.formatModifier != null) {
@@ -364,14 +389,12 @@ public class MetaTile implements TileResponseReceiver {
         }
 
         Rectangle tileRegion = tiles[tileIdx];
-        RenderedImage tile = createTile(tileRegion.x, tileRegion.y, tileRegion.width,
-                tileRegion.height);
-        disposeLater(tile);
         OutputStream outputStream = target.getOutputStream();
         ImageOutputStream imgOut = new MemoryCacheImageOutputStream(outputStream);
         writer.setOutput(imgOut);
-        IIOImage image = new IIOImage(tile, null, null);
+        IIOImage image = new IIOImage(metaTileImage, null, null);
         try {
+            param.setSourceRegion(tileRegion);
             writer.write(null, image, param);
         } finally {
             imgOut.close();

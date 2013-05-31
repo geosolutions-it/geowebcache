@@ -16,6 +16,7 @@
  */
 package org.geowebcache.layer.meta;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -24,21 +25,48 @@ public class LayerMetaInformation {
     
     String description;
     
-    List<String> keywords;
+    List<String> keywords=new LinkedList<String>();
     
-    List<ContactInformation> contacts;
+    List<ContactInformation> contacts = new LinkedList<ContactInformation>();
     
+    List<String> metadataLinks= new ArrayList<String>();
+    
+    /**
+     * @return the MetadataLinks
+     */
+    public List<String> getMetadataLinks() {
+        return metadataLinks;
+    }
+
+    /**
+     * @param metadataLinks the metadataLinks to set
+     */
+    public void setMetadataLinks(List<String> metadataLinks) {
+        metadataLinks= new ArrayList<String>(metadataLinks);
+    }
+
     LayerMetaInformation() {
         // default constructor for XStream
     }
-
-    public LayerMetaInformation(String title, String description, List<String> keywords, List<ContactInformation> contacts) {
+    
+    /**
+     * @param title
+     * @param description
+     * @param keywords
+     * @param contacts
+     * @param metadataLinks
+     */
+    public LayerMetaInformation(String title, String description, List<String> keywords,
+            List<ContactInformation> contacts, List<String> metadataLinks) {
         this.title = title;
         this.description = description;
         this.keywords = keywords;
         this.contacts = contacts;
+        if(metadataLinks!=null){
+            this.metadataLinks.addAll(metadataLinks);
+        }
     }
-    
+
     public String getTitle() {
         return title;
     }
@@ -47,17 +75,11 @@ public class LayerMetaInformation {
         return description;
     }
     
-    public synchronized List<String> getKeywords() {
-        if(keywords == null) {
-            keywords = new LinkedList<String>();
-        }
+    public  List<String> getKeywords() {
         return keywords;
     }
 
-    public synchronized List<ContactInformation> getContacts() {
-        if(contacts == null) {
-            contacts = new LinkedList<ContactInformation>();
-        }
+    public List<ContactInformation> getContacts() {
         return contacts;
     }
 }

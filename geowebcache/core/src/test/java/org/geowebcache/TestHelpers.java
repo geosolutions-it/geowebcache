@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.List;
@@ -12,6 +13,7 @@ import org.geowebcache.grid.BoundingBox;
 import org.geowebcache.grid.GridSetBroker;
 import org.geowebcache.grid.GridSubset;
 import org.geowebcache.grid.GridSubsetFactory;
+import org.geowebcache.layer.meta.WMSStyle;
 import org.geowebcache.layer.wms.WMSLayer;
 import org.geowebcache.seed.GWCTask;
 import org.geowebcache.seed.SeedRequest;
@@ -55,8 +57,14 @@ public class TestHelpers {
 
         grids.put(grid.getName(), grid);
         int[] metaWidthHeight = { 3, 3 };
-
-        WMSLayer layer = new WMSLayer("test:layer", urls, "aStyle", "test:layer", formatList,
+        final WMSStyle style1= new WMSStyle();
+        style1.setDefaultStyle(true);
+        style1.setDescription("aStyle");
+        style1.setIdentifier("aStyle");
+        style1.setLegendMimeType("image/png");
+        style1.setLegendURI("http://some.legend1.png");
+        
+        WMSLayer layer = new WMSLayer("test:layer", urls, Arrays.asList(style1), "test:layer", formatList,
                 grids, null, metaWidthHeight, "vendorparam=true", false);
 
         layer.initialize(gridSetBroker);

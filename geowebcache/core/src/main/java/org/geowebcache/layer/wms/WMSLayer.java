@@ -19,7 +19,6 @@ package org.geowebcache.layer.wms;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -27,8 +26,6 @@ import java.util.Map;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,8 +45,8 @@ import org.geowebcache.io.Resource;
 import org.geowebcache.layer.AbstractTileLayer;
 import org.geowebcache.layer.ExpirationRule;
 import org.geowebcache.layer.GridLocObj;
-import org.geowebcache.layer.TileLayer;
 import org.geowebcache.layer.meta.LayerMetaInformation;
+import org.geowebcache.layer.meta.WMSStyle;
 import org.geowebcache.mime.FormatModifier;
 import org.geowebcache.mime.MimeType;
 import org.geowebcache.mime.XMLMime;
@@ -70,7 +67,7 @@ public class WMSLayer extends AbstractTileLayer {
 
     private String wmsLayers;
 
-    protected String wmsStyles;
+    protected List<WMSStyle> wmsStyles;
 
     protected Integer gutter;
 
@@ -139,7 +136,7 @@ public class WMSLayer extends AbstractTileLayer {
      * @param metaWidthHeight
      * @param vendorParams
      */
-    public WMSLayer(String layerName, String[] wmsURL, String wmsStyles, String wmsLayers,
+    public WMSLayer(String layerName, String[] wmsURL, List<WMSStyle> wmsStyles, String wmsLayers,
             List<String> mimeFormats, Map<String, GridSubset> subSets,
             List<ParameterFilter> parameterFilters, int[] metaWidthHeight, String vendorParams,
             boolean queryable) {
@@ -147,7 +144,10 @@ public class WMSLayer extends AbstractTileLayer {
         this.name = layerName;
         this.wmsUrl = wmsURL;
         this.wmsLayers = wmsLayers;
-        this.wmsStyles = wmsStyles;
+        this.wmsStyles= new ArrayList<WMSStyle>();
+        if(wmsStyles!=null){
+            this.wmsStyles.addAll(wmsStyles);
+        }
         this.mimeFormats = mimeFormats == null ? null : new ArrayList<String>(mimeFormats);
         this.subSets = subSets;
         this.gridSubsets = new ArrayList<XMLGridSubset>();
@@ -562,9 +562,15 @@ public class WMSLayer extends AbstractTileLayer {
         }
         params.put("EXCEPTIONS", exceptions);
 
+        // search for a default style or retain the last one available
         String styles = "";
-        if (wmsStyles != null && wmsStyles.length() != 0) {
-            styles = wmsStyles;
+        if (wmsStyles != null&& !wmsStyles.isEmpty()) {
+            for(WMSStyle style:wmsStyles){
+                styles = style.getIdentifier();
+                if(style.isDefaultStyle()){
+                    break;
+                }
+            }
         }
         params.put("STYLES", styles);
 
@@ -843,7 +849,7 @@ public class WMSLayer extends AbstractTileLayer {
     }
 
     @Override
-    public String getStyles() {
+    public List<WMSStyle> getStyles() {
         return wmsStyles;
     }
 }

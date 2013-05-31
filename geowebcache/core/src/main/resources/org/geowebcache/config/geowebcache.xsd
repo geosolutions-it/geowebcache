@@ -142,6 +142,14 @@
             </xs:choice>
           </xs:complexType>
         </xs:element>
+        <xs:element name="inspireCompliancy" type="xs:boolean" minOccurs="0" maxOccurs="1" default="false">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+              This flag indicates that we are trying to achieve INSPIRE Compliancy, hence we 
+              need to use the INSPIRE schema in output as well as the INSPIRECRS84Quad.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>        
       </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -379,7 +387,7 @@
               </xs:documentation>
             </xs:annotation>
           </xs:element>
-          <xs:element name="wmsStyles" type="xs:string" minOccurs="0">
+          <xs:element name="wmsStyles" minOccurs="0">
             <xs:annotation>
               <xs:documentation xml:lang="en">
                 This is the value sent to the backend server for the STYLES
@@ -387,6 +395,11 @@
                 It may contain commas.
               </xs:documentation>
             </xs:annotation>
+			<xs:complexType>
+			  <xs:sequence>
+			    <xs:element name="wmsStyle" type="gwc:WMSStyle" minOccurs="0" maxOccurs="unbounded" />
+			  </xs:sequence>
+			</xs:complexType>            
           </xs:element>
           <xs:element name="gutter" type="xs:integer" minOccurs="0">
             <xs:annotation>
@@ -624,6 +637,45 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="WMSStyle">
+    <xs:sequence>
+      <xs:element name="identifier" type="xs:string">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            The name is the unique identifer of the WMS Style
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="description" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            A description of the WMS Style
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="legendURI" type="xs:string" minOccurs="0" maxOccurs="1">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            Indicates whether or not this is the default styles for WMS calls
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="legendMimeType" type="xs:string" minOccurs="0" maxOccurs="1">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            Indicates whether or not this is the default styles for WMS calls
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>   
+      <xs:element name="defaultStyle" type="xs:boolean" minOccurs="0" maxOccurs="1">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            Indicates whether or not this is the default styles for WMS calls
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>         
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="GridSet">
     <xs:sequence>
       <xs:element name="name" type="xs:string">
@@ -1565,6 +1617,13 @@
           </xs:documentation>
         </xs:annotation>
       </xs:element>
+      <xs:element name="metadataLinks" type="gwc:MetadataLinkType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            Links to an extends CSW that describes this layer. The link should be a valid CSW GetRecordById call if we are looking for INSPIRE Compliancy.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>      
     </xs:sequence>
   </xs:complexType>
 
@@ -1599,7 +1658,7 @@
             for this service.
           </xs:documentation>
         </xs:annotation>
-      </xs:element>
+      </xs:element>    
       <xs:element name="fees" type="xs:string" maxOccurs="1" minOccurs="0">
         <xs:annotation>
           <xs:documentation xml:lang="en">
@@ -1618,8 +1677,14 @@
       </xs:element>
       <xs:element name="providerSite" type="xs:string" maxOccurs="1" minOccurs="0">
       </xs:element>
+      <xs:element name="INSPIREAdditionalInformation" type="gwc:INSPIREAdditionalInformationType" maxOccurs="1" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            Additional information suitable for providing INSPIRE metadata
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>  
     </xs:sequence>
-
   </xs:complexType>
 
   <xs:complexType name="KeywordsType">
@@ -1633,7 +1698,83 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="MetadataLinkType">
+    <xs:sequence>
+      <xs:element name="string" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            A metadata link for an element that points to a CSW GetRecord call
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>  
 
+  <xs:complexType name="INSPIREAdditionalInformationType">
+    <xs:sequence>
+      <xs:element name="defaultLanguage" type="xs:string" maxOccurs="1" minOccurs="1">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            The default language for the service
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="additionalLanguages" type="gwc:StringList" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            The additional languages for the service
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>      
+      <xs:element name="linkViewServiceLink" type="xs:string" maxOccurs="1" minOccurs="1">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            A CSW link that describes this service with ISO Metadata
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="themes" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            Array for themes for this service
+          </xs:documentation>
+        </xs:annotation>
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="theme" type="gwc:ThemeType" minOccurs="1" maxOccurs="unbounded" />
+            </xs:sequence>
+          </xs:complexType>        
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  
+
+  <xs:complexType name="ThemeType">
+    <xs:sequence>
+      <xs:element name="title" type="xs:string" maxOccurs="1" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            The name of the provider of this service (i.e. organisation name).
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="identifier" type="xs:string" maxOccurs="1" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            The web site for the provider of this service.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="layerRefs" type="gwc:StringList" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            An array of layer references for the enclosing theme
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>  
+  
   <xs:complexType name="ServiceProviderType">
     <xs:sequence>
       <xs:element name="providerName" type="xs:string" maxOccurs="1" minOccurs="0">

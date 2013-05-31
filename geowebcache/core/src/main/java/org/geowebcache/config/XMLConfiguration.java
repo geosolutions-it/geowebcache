@@ -60,7 +60,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geowebcache.GeoWebCacheException;
 import org.geowebcache.GeoWebCacheExtensions;
+import org.geowebcache.config.meta.INSPIREAdditionalInformation;
 import org.geowebcache.config.meta.ServiceInformation;
+import org.geowebcache.config.meta.Theme;
 import org.geowebcache.filter.parameters.FloatParameterFilter;
 import org.geowebcache.filter.parameters.ParameterFilter;
 import org.geowebcache.filter.parameters.RegexParameterFilter;
@@ -74,6 +76,7 @@ import org.geowebcache.layer.ExpirationRule;
 import org.geowebcache.layer.TileLayer;
 import org.geowebcache.layer.meta.ContactInformation;
 import org.geowebcache.layer.meta.LayerMetaInformation;
+import org.geowebcache.layer.meta.WMSStyle;
 import org.geowebcache.layer.updatesource.GeoRSSFeedDefinition;
 import org.geowebcache.layer.wms.WMSHttpHelper;
 import org.geowebcache.layer.wms.WMSLayer;
@@ -472,6 +475,9 @@ public class XMLConfiguration implements Configuration {
         xs.useAttributeFor(GeoWebCacheConfiguration.class, "xmlns");
 
         // xs.alias("layers", List.class);
+        xs.alias("theme", Theme.class);
+        xs.alias("INSPIREAdditionalInformation", INSPIREAdditionalInformation.class);
+        xs.alias("wmsStyle", WMSStyle.class);
         xs.alias("wmsLayer", WMSLayer.class);
 
         // These two are for 1.1.x compatibility
@@ -481,6 +487,7 @@ public class XMLConfiguration implements Configuration {
         xs.alias("gridSet", XMLGridSet.class);
         xs.alias("gridSubset", XMLGridSubset.class);
 
+        xs.alias("keywords", new ArrayList<String>().getClass());
         xs.alias("mimeFormats", new ArrayList<String>().getClass());
         xs.alias("formatModifiers", new ArrayList<FormatModifier>().getClass());
         xs.alias("srs", org.geowebcache.grid.SRS.class);
@@ -537,7 +544,6 @@ public class XMLConfiguration implements Configuration {
             try {
                 writer = new OutputStreamWriter(new FileOutputStream(xmlFile), "UTF-8");
             } catch (UnsupportedEncodingException uee) {
-                uee.printStackTrace();
                 throw new IOException(uee.getMessage());
             } catch (FileNotFoundException fnfe) {
                 throw fnfe;

@@ -38,6 +38,7 @@ import org.geowebcache.grid.GridSubset;
 import org.geowebcache.grid.GridSubsetFactory;
 import org.geowebcache.grid.SRS;
 import org.geowebcache.layer.meta.LayerMetaInformation;
+import org.geowebcache.layer.meta.WMSStyle;
 import org.geowebcache.layer.updatesource.UpdateSourceDefinition;
 import org.geowebcache.mime.FormatModifier;
 import org.geowebcache.mime.MimeType;
@@ -327,7 +328,7 @@ public abstract class AbstractTileLayer extends TileLayer {
      * @return the styles configured for the layer, may be null
      */
     @Override
-    public abstract String getStyles();
+    public abstract List<WMSStyle> getStyles();
 
     /**
      * 

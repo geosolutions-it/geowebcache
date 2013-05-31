@@ -36,6 +36,8 @@ public class GridSetBroker {
     public final GridSet WORLD_EPSG4326;
 
     public final GridSet WORLD_EPSG3857;
+    
+    public final GridSet INSPIRECRS84QUAD;
 
     private Map<String, GridSet> gridSets;
 
@@ -138,6 +140,21 @@ public class GridSetBroker {
                         + " tiles of 256x256 pixels and so on in powers of 2. Scale denominator is only accurate near the equator.");
 
         gridSets.put(GoogleCRS84Quad.getName(), GoogleCRS84Quad);
+
+        log.debug("Adding InspireCRS84Quad");
+        INSPIRECRS84QUAD = GridSetFactory.createGridSet("InspireCRS84Quad",
+                SRS.getCRS84(), BoundingBox.WORLD4326, true, scalesInspireCRS84QuadResolutions(),
+                null, null, GridSetFactory.DEFAULT_PIXEL_SIZE_METER, null, 256, 256, true);
+        INSPIRECRS84QUAD
+                .setDescription("This well-known scale set has been defined for global cartographic products. "
+                        + "Rounded pixel sizes have been chosen for intuitive cartographic representation of raster data. "
+                        + "Some values have been chosen to coincide with original pixel size of commonly used global"
+                        + "products like STRM (1\" and 3\"), GTOPO (30\") or ETOPO (2' and 5'). Scale denominator"
+                        + "and approximated pixel size in meters are only accurate near the equator.");
+
+        gridSets.put(INSPIRECRS84QUAD.getName(), INSPIRECRS84QUAD);
+        
+        
         embeddedGridSets = Collections.unmodifiableSet(new HashSet<String>(gridSets.keySet()));
     }
 
@@ -212,6 +229,29 @@ public class GridSetBroker {
         return scalesCRS84Pixel;
     }
 
+    private double[] scalesInspireCRS84QuadResolutions() {
+        double[] scalesCRS84Pixel = new double[18];
+        scalesCRS84Pixel[0]  = 0.703125;
+        scalesCRS84Pixel[1]  = 0.3515625;
+        scalesCRS84Pixel[2]  = 0.17578125; 
+        scalesCRS84Pixel[3]  = 0.087890625;
+        scalesCRS84Pixel[4]  = 0.0439453125; 
+        scalesCRS84Pixel[5]  = 0.02197265625; 
+        scalesCRS84Pixel[6]  = 0.010986328125; 
+        scalesCRS84Pixel[7]  = 0.0054931640625; 
+        scalesCRS84Pixel[8]  = 0.00274658203125; 
+        scalesCRS84Pixel[9]  = 0.001373291015625; 
+        scalesCRS84Pixel[10] = 0.0006866455078125; 
+        scalesCRS84Pixel[11] = 0.00034332275390625; 
+        scalesCRS84Pixel[12] = 0.000171661376953125; 
+        scalesCRS84Pixel[13] = 0.000085830688476563; 
+        scalesCRS84Pixel[14] = 0.000042915344238281; 
+        scalesCRS84Pixel[15] = 0.000021457672119141; 
+        scalesCRS84Pixel[16] = 0.000010728836059570; 
+        scalesCRS84Pixel[17] = 0.000005364418029785; 
+
+        return scalesCRS84Pixel;
+    }
     private double[] scalesCRS84ScaleDenominators() {
         // double[] scalesCRS84Pixel = { 1.25764139776733, 0.628820698883665, 0.251528279553466,
         // 0.125764139776733, 6.28820698883665E-2, 2.51528279553466E-2, 1.25764139776733E-2,

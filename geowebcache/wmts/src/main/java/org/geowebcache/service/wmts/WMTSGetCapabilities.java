@@ -27,9 +27,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.geowebcache.config.meta.INSPIREAdditionalInformation;
 import org.geowebcache.config.meta.ServiceContact;
 import org.geowebcache.config.meta.ServiceInformation;
 import org.geowebcache.config.meta.ServiceProvider;
+import org.geowebcache.config.meta.Theme;
 import org.geowebcache.conveyor.Conveyor.CacheResult;
 import org.geowebcache.filter.parameters.ParameterFilter;
 import org.geowebcache.grid.Grid;
@@ -40,6 +42,7 @@ import org.geowebcache.grid.SRS;
 import org.geowebcache.layer.TileLayer;
 import org.geowebcache.layer.TileLayerDispatcher;
 import org.geowebcache.layer.meta.LayerMetaInformation;
+import org.geowebcache.layer.meta.WMSStyle;
 import org.geowebcache.mime.MimeType;
 import org.geowebcache.stats.RuntimeStats;
 import org.geowebcache.util.ServletUtils;
@@ -109,10 +112,37 @@ public class WMTSGetCapabilities {
         serviceProvider(str);
         operationsMetadata(str);
         contents(str);
+        
+        // THEMES if available
+        themes(str);
+        
         str.append("<ServiceMetadataURL xlink:href=\""+baseUrl+"?REQUEST=getcapabilities&amp;VERSION=1.0.0\"/>\n");
         str.append("</Capabilities>");
 
         return str.toString();
+    }
+
+    /**
+     * Spit out themes at the end of the content
+     * @param str the {@link StringBuffer} to use as buffer.
+     */
+    private void themes(StringBuilder str) {
+        ServiceInformation servInfo = tld.getServiceInformation();        
+        if (servInfo != null) {
+            final INSPIREAdditionalInformation inspire = servInfo.getINSPIREServiceAdditionalInformation();
+            str.append("<Themes>\n");
+            for(Theme theme:inspire.getThemes()){
+                str.append("  <Theme>\n");
+                appendTag(str, "    ", "ows:identifier", theme.getIdentifier(), null);
+                appendTag(str, "    ", "ows:title", theme.getIdentifier(), null);
+                for(String layerRef:theme.getLayerRefs()){
+                    appendTag(str, "    ", "LayerRef", encodeXmlChars(layerRef), null);
+                }
+                str.append("  </Theme>\n");
+            }
+            str.append("</Themes>\n");
+        }    
+        
     }
 
     private void serviceIdentification(StringBuilder str) {
@@ -187,7 +217,7 @@ public class WMTSGetCapabilities {
                 
                 str.append("    </ows:ContactInfo>\n");
                 str.append("  </ows:ServiceContact>\n");
-            }
+            }            
         } else {
             appendTag(str, "  ", "ows:ProviderName", baseUrl, null);
             appendXlink(str, "  ", "ows:ProviderSite", baseUrl);
@@ -200,10 +230,37 @@ public class WMTSGetCapabilities {
     }
     
     private void operationsMetadata(StringBuilder str) {
+        ServiceInformation servInfo = tld.getServiceInformation();
+     
         str.append("<ows:OperationsMetadata>\n");
         operation(str, "GetCapabilities", baseUrl);
         operation(str, "GetTile", baseUrl);
         operation(str, "GetFeatureInfo", baseUrl);
+
+        
+        // INSPIRE STUFF
+        if(servInfo != null) {
+            final INSPIREAdditionalInformation inspireInfo = servInfo.getINSPIREServiceAdditionalInformation();
+            if(inspireInfo!=null){
+                str.append("  <inspire_vs:ExtendedCapabilities>\n");
+                
+                // LINK VIEW SERVICE
+                str.append("    <inspire_common:MetadataUrl xsi:type=\"inspire_common:resourceLocatorType\">\n");
+                appendTag(str, "      ", "inspire_common:URL", inspireInfo.getLinkViewServiceLink(), null);
+                appendTag(str, "      ", "inspire_common:MediaType", "application/vnd.iso.19139+xml", null);
+                str.append("    </inspire_common:MetadataUrl>\n");
+                
+                // LANGUAGE
+                str.append("    <inspire_common:Languages>\n");
+                str.append("      <inspire_common:Language default=\"true\">");
+                str.append(inspireInfo.getDefaultLanguage());
+                str.append("</inspire_common:Language>\n");
+                str.append("    </inspire_common:Languages>\n");
+                
+                // TODO support other languages
+                str.append("  </inspire_vs:ExtendedCapabilities>\n");
+            }
+        }
         str.append("</ows:OperationsMetadata>\n");
     }
         
@@ -249,6 +306,9 @@ public class WMTSGetCapabilities {
         } else {
             appendTag(str, "    ", "ows:Title", layerMeta.getTitle(), null);
             appendTag(str, "    ", "ows:Abstract", layerMeta.getDescription(), null);
+            for(String metadataLink:layerMeta.getMetadataLinks()){
+                appendTag(str, "    ", "ows:Metadata", encodeXmlChars(metadataLink), null);
+            }
         }
 
         layerWGS84BoundingBox(str, layer);
@@ -285,11 +345,29 @@ public class WMTSGetCapabilities {
      }
      
      private void layerStyles(StringBuilder str, TileLayer layer, List<ParameterFilter> filters) {
-         String defStyle = layer.getStyles();
+         List<WMSStyle> defStyle = layer.getStyles();
          if(filters == null) {
-             str.append("    <Style isDefault=\"true\">\n");
-             str.append("      <ows:Identifier>"+TileLayer.encodeDimensionValue(defStyle)+"</ows:Identifier>\n");
-             str.append("    </Style>\n");
+             for(WMSStyle style:defStyle){
+                 if(style.isDefaultStyle()){
+                     str.append("    <Style isDefault=\"true\">\n");
+                 } else {
+                     str.append("    <Style>\n");
+                 }
+                 appendTag(str,"      ","ows:Identifier",TileLayer.encodeDimensionValue(style.getIdentifier()),null);
+                 final String description = style.getDescription();
+                 if(description!=null){
+                     appendTag(str,"      ","ows:Title",description,null);
+                 }
+                 
+                 // LEGEND
+                 final String legendURL=style.getLegendURI();
+                 final String legendMimeType=style.getLegendMimeType();
+                 if(legendURL!=null&&legendMimeType!=null){
+                     str.append("      ").append("<LegendURL format=\""+legendMimeType+"\">").append(encodeXmlChars(legendURL)).append("</LegendURL>\n");
+                 }
+                 str.append("    </Style>\n");                 
+             }
+
          } else {
              ParameterFilter stylesFilter = null;
              Iterator<ParameterFilter> iter = filters.iterator();
@@ -304,7 +382,12 @@ public class WMTSGetCapabilities {
                  String defVal = stylesFilter.getDefaultValue(); 
                  if(defVal == null) {
                      if(defStyle != null) {
-                         defVal = defStyle;
+                         for(WMSStyle style:defStyle){
+                             defVal = style.getIdentifier();
+                             if(style.isDefaultStyle()){
+                                 break;
+                             }
+                         }
                      } else {
                          defVal = "";
                      }
@@ -380,7 +463,7 @@ public class WMTSGetCapabilities {
         for (String gridSetId : layer.getGridSubsets()) {
             GridSubset gridSubset = layer.getGridSubset(gridSetId);
          
-             str.append("    <TileMatrixSetLink>");
+             str.append("    <TileMatrixSetLink>\n");
              str.append("      <TileMatrixSet>" + gridSubset.getName() + "</TileMatrixSet>\n");
              
              if (! gridSubset.fullGridSetCoverage()) {
@@ -399,7 +482,7 @@ public class WMTSGetCapabilities {
                 }
                 str.append("      </TileMatrixSetLimits>\n");
             }
-            str.append("    </TileMatrixSetLink>");
+            str.append("    </TileMatrixSetLink>\n");
          }
      }
      
@@ -407,7 +490,16 @@ public class WMTSGetCapabilities {
          str.append("  <TileMatrixSet>\n");
          str.append("    <ows:Identifier>"+gridSet.getName()+"</ows:Identifier>\n");
          // If the following is not good enough, please get in touch and we will try to fix it :)
-         str.append("    <ows:SupportedCRS>urn:ogc:def:crs:EPSG::"+gridSet.getSrs().getNumber()+"</ows:SupportedCRS>\n");
+         final SRS srs = gridSet.getSrs(); // CRS:84
+         if(srs.getAuthority()!=null&&srs.getAuthority().equalsIgnoreCase("CRS")){
+             str.append("    <ows:SupportedCRS>CRS:").append(srs.getNumber()).append("</ows:SupportedCRS>\n");
+         }else if(srs.getAuthority()!=null&&srs.getAuthority().equalsIgnoreCase("EPSG")){
+             str.append("    <ows:SupportedCRS>urn:ogc:def:crs:EPSG::").append(srs.getNumber()).append("</ows:SupportedCRS>\n");
+         }else if(srs.getAuthority()!=null){
+             str.append("    <ows:SupportedCRS>").append(srs.getAuthority()).append(":").append(srs.getNumber()).append("</ows:SupportedCRS>\n");       
+         } else {
+             throw new IllegalStateException("Unable to encode SRS="+srs.toString());
+         }
          // TODO detect these str.append("    <WellKnownScaleSet>urn:ogc:def:wkss:GlobalCRS84Pixel</WellKnownScaleSet>\n");
          Grid[] grids = gridSet.getGridLevels();
          for(int i=0; i<grids.length; i++) {

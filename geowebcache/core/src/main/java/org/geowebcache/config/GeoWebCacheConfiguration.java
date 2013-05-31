@@ -69,6 +69,7 @@ public class GeoWebCacheConfiguration {
      */
     private List<TileLayer> layers;
 
+    private boolean inspireCompliancy;
     /**
      * Default constructor
      */
@@ -251,5 +252,19 @@ public class GeoWebCacheConfiguration {
      */
     public List<TileLayer> getLayers() {
         return layers;
+    }
+
+    /**
+     * @return the inspireCompliancy
+     */
+    public boolean isInspireCompliancy() {
+        return inspireCompliancy;
+    }
+
+    /**
+     * @param inspireCompliancy the inspireCompliancy to set
+     */
+    public void setInspireCompliancy(boolean inspireCompliancy) {
+        this.inspireCompliancy = inspireCompliancy;
     }
 }

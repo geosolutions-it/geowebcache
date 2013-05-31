@@ -32,7 +32,7 @@ import org.geowebcache.grid.SRS;
 import org.geowebcache.io.ByteArrayResource;
 import org.geowebcache.layer.AbstractTileLayer;
 import org.geowebcache.layer.BadTileException;
-import org.geowebcache.layer.TileLayer;
+import org.geowebcache.layer.meta.WMSStyle;
 import org.geowebcache.mime.MimeType;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -161,7 +161,7 @@ public class KMLDebugGridLayer extends AbstractTileLayer {
         return tile;
     }
 
-    public String getStyles() {
+    public List<WMSStyle> getStyles() {
         return null;
     }
 

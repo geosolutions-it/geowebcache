@@ -106,7 +106,7 @@ public class GridSetFactory {
         gridSet.setyCoordinateFirst(yCoordinateFirst);
 
         if (metersPerUnit == null) {
-            if (srs.equals(SRS.getEPSG4326())) {
+            if (srs.equals(SRS.getEPSG4326())||srs.equals(SRS.getCRS84())) {
                 gridSet.setMetersPerUnit(EPSG4326_TO_METERS);
             } else if (srs.equals(SRS.getEPSG3857())) {
                 gridSet.setMetersPerUnit(EPSG3857_TO_METERS);
@@ -133,7 +133,8 @@ public class GridSetFactory {
             gridSet.setGridLevels(new Grid[resolutions.length]);
         }
 
-        for (int i = 0; i < gridSet.getGridLevels().length; i++) {
+        final int length = gridSet.getGridLevels().length;
+        for (int i = 0; i < length; i++) {
             Grid curGrid = new Grid();
 
             if (scaleDenoms != null) {
