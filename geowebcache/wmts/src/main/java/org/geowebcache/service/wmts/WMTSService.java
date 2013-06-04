@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.geowebcache.GeoWebCacheDispatcher;
 import org.geowebcache.GeoWebCacheException;
+import org.geowebcache.config.meta.INSPIREAdditionalInformation;
 import org.geowebcache.conveyor.Conveyor;
 import org.geowebcache.conveyor.ConveyorTile;
 import org.geowebcache.grid.GridSetBroker;
@@ -97,15 +98,43 @@ public class WMTSService extends Service {
             throws GeoWebCacheException, OWSException {
         String encoding = request.getCharacterEncoding();
         String[] keys = { "layer", "request", "style", "format", "tilematrixset", "tilematrix",
-                "tilerow", "tilecol" };
+                "tilerow", "tilecol","language","service" };
         Map<String, String> values = ServletUtils.selectedStringsFromMap(request.getParameterMap(),
                 encoding, keys);
 
+        // INSPIRE support
+        // it is more restrictive
+        boolean inspire= this.tld.getServiceInformation()!=null?  this.tld.getServiceInformation().getINSPIREServiceAdditionalInformation()!=null:false;
+        if(inspire){            
+            // service
+            String service = values.get("service");
+            if (service == null) {
+                // OWSException(httpCode, exceptionCode, locator, exceptionText);
+                throw new OWSException(400, "MissingParameterValue", "service","Missing Request parameter",this.tld.getDefaultLanguage());
+            } else {
+                if (!service.equals("WMTS")) {
+                    throw new OWSException(501, "InvalidParameterValue", "service", service+ " is not valid",this.tld.getDefaultLanguage());
+                }                                
+            }   
+            
+            // language
+            final INSPIREAdditionalInformation inspireServiceAdditionalInformation = this.tld.getServiceInformation().getINSPIREServiceAdditionalInformation();            
+            String language = values.get("language");
+            if (language != null) {
+                // we do support only the default language
+                if(!inspireServiceAdditionalInformation.getDefaultLanguage().equals(language)){
+                    throw new OWSException(501, "InvalidParameterValue", "language", language+ " is not valid",this.tld.getDefaultLanguage());
+                }                                
+            }               
+         
+        }
+
+        
         String req = values.get("request");
         if (req == null) {
             // OWSException(httpCode, exceptionCode, locator, exceptionText);
             throw new OWSException(400, "MissingParameterValue", "request",
-                    "Missing Request parameter");
+                    "Missing Request parameter",this.tld.getDefaultLanguage());
         } else {
             req = req.toLowerCase();
         }
@@ -125,7 +154,7 @@ public class WMTSService extends Service {
             return tile;
         } else {
             throw new OWSException(501, "OperationNotSupported", "request", req
-                    + " is not implemented");
+                    + " is not implemented",this.tld.getDefaultLanguage());
         }
     }
 
@@ -135,7 +164,7 @@ public class WMTSService extends Service {
 
         String layer = values.get("layer");
         if (layer == null) {
-            throw new OWSException(400, "MissingParameterValue", "LAYER", "Missing LAYER parameter");
+            throw new OWSException(400, "MissingParameterValue", "LAYER", "Missing LAYER parameter",this.tld.getDefaultLanguage());
         }
 
         TileLayer tileLayer = null;
@@ -144,7 +173,7 @@ public class WMTSService extends Service {
             tileLayer = tld.getTileLayer(layer);
         } catch (GeoWebCacheException e) {
             throw new OWSException(400, "InvalidParameterValue", "LAYER", "LAYER " + layer
-                    + " is not known.");
+                    + " is not known.",this.tld.getDefaultLanguage());
         }
 
         Map<String, String> fullParameters;
@@ -152,7 +181,7 @@ public class WMTSService extends Service {
             fullParameters = tileLayer.getModifiableParameters(request.getParameterMap(), encoding);
         } catch (GeoWebCacheException e) {
             throw new OWSException(500, "NoApplicableCode", "", e.getMessage()
-                    + " while fetching modifiable parameters for LAYER " + layer);
+                    + " while fetching modifiable parameters for LAYER " + layer,this.tld.getDefaultLanguage());
         }
 
         MimeType mimeType = null;
@@ -160,13 +189,13 @@ public class WMTSService extends Service {
             String format = values.get("format");
             if (format == null) {
                 throw new OWSException(400, "MissingParameterValue", "FORMAT",
-                        "Unable to determine requested FORMAT, " + format);
+                        "Unable to determine requested FORMAT, " + format,this.tld.getDefaultLanguage());
             }
             try {
                 mimeType = MimeType.createFromFormat(format);
             } catch (MimeException me) {
                 throw new OWSException(400, "InvalidParameterValue", "FORMAT",
-                        "Unable to determine requested FORMAT, " + format);
+                        "Unable to determine requested FORMAT, " + format,this.tld.getDefaultLanguage());
             }
         } else {
             String infoFormat = ServletUtils.stringFromMap(request.getParameterMap(),
@@ -174,45 +203,45 @@ public class WMTSService extends Service {
             
             if (infoFormat == null) {
                 throw new OWSException(400, "MissingParameterValue", "INFOFORMAT",
-                        "Parameter INFOFORMAT was not provided");
+                        "Parameter INFOFORMAT was not provided",this.tld.getDefaultLanguage());
             }
             try {
                 mimeType = MimeType.createFromFormat(infoFormat);
             } catch (MimeException me) {
                 throw new OWSException(400, "InvalidParameterValue", "INFOFORMAT",
-                        "Unable to determine requested INFOFORMAT, " + infoFormat);
+                        "Unable to determine requested INFOFORMAT, " + infoFormat,this.tld.getDefaultLanguage());
             }
         }
 
         final String tilematrixset = values.get("tilematrixset");
         if (tilematrixset == null) {
             throw new OWSException(400, "MissingParameterValue", "TILEMATRIXSET",
-                    "No TILEMATRIXSET specified");
+                    "No TILEMATRIXSET specified",this.tld.getDefaultLanguage());
         }
 
         GridSubset gridSubset = tileLayer.getGridSubset(tilematrixset);
         if (gridSubset == null) {
             throw new OWSException(400, "InvalidParameterValue", "TILEMATRIXSET",
                     "Unable to match requested TILEMATRIXSET " + tilematrixset
-                            + " to those supported by layer");
+                            + " to those supported by layer",this.tld.getDefaultLanguage());
         }
 
         final String tileMatrix = values.get("tilematrix");
         if (tileMatrix == null) {
             throw new OWSException(400, "MissingParameterValue", "TILEMATRIX",
-                    "No TILEMATRIX specified");
+                    "No TILEMATRIX specified",this.tld.getDefaultLanguage());
         }
         long z = gridSubset.getGridIndex(tileMatrix);
 
         if (z < 0) {
             throw new OWSException(400, "InvalidParameterValue", "TILEMATRIX",
-                    "Unknown TILEMATRIX " + tileMatrix);
+                    "Unknown TILEMATRIX " + tileMatrix,this.tld.getDefaultLanguage());
         }
 
         // WMTS has 0 in the top left corner -> flip y value
         final String tileRow = values.get("tilerow");
         if (tileRow == null) {
-            throw new OWSException(400, "MissingParameterValue", "TILEROW", "No TILEROW specified");
+            throw new OWSException(400, "MissingParameterValue", "TILEROW", "No TILEROW specified",this.tld.getDefaultLanguage());
         }
         
         final long tilesHigh = gridSubset.getNumTilesHigh((int) z);
@@ -222,7 +251,7 @@ public class WMTSService extends Service {
         String tileCol = values.get("tilecol");
         if (tileCol == null) {
             throw new OWSException(400, "MissingParameterValue", "TILECOLUMN",
-                    "No TILECOLUMN specified");
+                    "No TILECOLUMN specified",this.tld.getDefaultLanguage());
         }
         long x = Long.parseLong(tileCol);
 
@@ -230,7 +259,7 @@ public class WMTSService extends Service {
 
         if (x < gridCov[0] || x > gridCov[2]) {
             throw new OWSException(400, "TileOutOfRange", "TILECOLUMN", "Column " + x
-                    + " is out of range, min: " + gridCov[0] + " max:" + gridCov[2]);
+                    + " is out of range, min: " + gridCov[0] + " max:" + gridCov[2],this.tld.getDefaultLanguage());
         }
 
         if (y < gridCov[1] || y > gridCov[3]) {
@@ -238,7 +267,7 @@ public class WMTSService extends Service {
             long maxRow = tilesHigh - gridCov[1] - 1;
 
             throw new OWSException(400, "TileOutOfRange", "TILEROW", "Row " + tileRow
-                    + " is out of range, min: " + minRow + " max:" + maxRow);
+                    + " is out of range, min: " + minRow + " max:" + maxRow,this.tld.getDefaultLanguage());
         }
 
         long[] tileIndex = { x, y, z };
@@ -274,7 +303,7 @@ public class WMTSService extends Service {
 
             } else if (tile.getHint().equals("getfeatureinfo")) {
                 ConveyorTile convTile = (ConveyorTile) conv;
-                WMTSGetFeatureInfo wmsGFI = new WMTSGetFeatureInfo(convTile);
+                WMTSGetFeatureInfo wmsGFI = new WMTSGetFeatureInfo(tld,convTile);
                 wmsGFI.writeResponse(stats);
             }
         }

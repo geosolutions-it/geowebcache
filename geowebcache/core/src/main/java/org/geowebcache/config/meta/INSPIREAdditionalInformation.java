@@ -20,6 +20,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+
 /**
  * @author Simone Giannecchini, GeoSolutions
  *
@@ -93,4 +96,8 @@ public class INSPIREAdditionalInformation implements Serializable {
         this.linkViewServiceLink = linkViewServiceLink;
     }
 
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this,ToStringStyle.MULTI_LINE_STYLE);
+    }
 }

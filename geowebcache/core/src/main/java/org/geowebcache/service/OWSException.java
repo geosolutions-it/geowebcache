@@ -29,12 +29,30 @@ public class OWSException extends Exception {
     String locator;
 
     String exceptionText;
+    
+    String language;
 
-    public OWSException(int httpCode, String exceptionCode, String locator, String exceptionText) {
+    /**
+     * Full constructor for an {@link OWSException}.
+     * 
+     * @param httpCode
+     * @param exceptionCode
+     * @param locator
+     * @param exceptionText
+     * @param language
+     */
+    public OWSException(int httpCode, String exceptionCode, String locator, String exceptionText,
+            String language) {
+
         this.httpCode = httpCode;
         this.exceptionCode = exceptionCode;
         this.locator = locator;
         this.exceptionText = exceptionText;
+        this.language=language;
+    }
+
+    public OWSException(int httpCode, String exceptionCode, String locator, String exceptionText) {
+        this(httpCode, exceptionCode, locator, exceptionText,null);
     }
     
     public int getResponseCode() {
@@ -54,9 +72,13 @@ public class OWSException extends Exception {
         str.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         str.append("<ExceptionReport version=\"1.1.0\" xmlns=\"http://www.opengis.net/ows/1.1\"\n");
         str.append("  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n");
-        str.append("  xsi:schemaLocation=\"http://www.opengis.net/ows/1.1 http://geowebcache.org/schema/ows/1.1.0/owsExceptionReport.xsd\">\n");
-        str.append("  <Exception exceptionCode=\"" + exceptionCode + "\" locator=\"" + locator + "\">\n");
-        str.append("    <ExceptionText>" + exceptionText + "</ExceptionText>\n");
+        str.append("  xsi:schemaLocation=\"http://www.opengis.net/ows/1.1").append(" http://geowebcache.org/schema/ows/1.1.0/owsExceptionReport.xsd\"");
+        if(language!=null){
+            str.append(" xml:lang=\"").append(language).append("\"");
+        }
+        str.append(">\n");
+        str.append("  <Exception exceptionCode=\"").append(exceptionCode).append( "\" locator=\"" ).append( locator ).append( "\">\n");
+        str.append("    <ExceptionText>" ).append( exceptionText ).append( "</ExceptionText>\n");
         str.append("  </Exception>\n");
         str.append("</ExceptionReport>\n");
 

@@ -64,7 +64,7 @@ public class SRS implements Comparable<SRS> {
     }
     
     private SRS(int epsgNumber) {
-        this(epsgNumber, null);
+        this(epsgNumber,null);
     }
 
     private SRS(int epsgNumber, List<Integer> aliases) {

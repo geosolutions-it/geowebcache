@@ -19,6 +19,9 @@ package org.geowebcache.config.meta;
 import java.io.Serializable;
 import java.util.List;
 
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+
 public class ServiceInformation implements Serializable{
 
     private static final long serialVersionUID = -4466383328619274445L;
@@ -167,5 +170,8 @@ public class ServiceInformation implements Serializable{
             INSPIREAdditionalInformation serviceAdditionalInformation) {
         this.INSPIREAdditionalInformation = serviceAdditionalInformation;
     }
-
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this,ToStringStyle.MULTI_LINE_STYLE);
+    }
 }

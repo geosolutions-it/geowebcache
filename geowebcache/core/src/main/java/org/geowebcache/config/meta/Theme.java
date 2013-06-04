@@ -20,7 +20,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+
 /**
+ * Theme info for INSPIRE Compliancy
  * @author Simone Giannecchini, GeoSolutions SAS
  *
  */
@@ -79,5 +83,8 @@ public class Theme implements Serializable {
         }
         this.layerRefs= new ArrayList<String>(layerRefs);
     }
-
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this,ToStringStyle.MULTI_LINE_STYLE);
+    }
 }

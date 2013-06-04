@@ -19,6 +19,8 @@ package org.geowebcache.layer.meta;
 import java.io.Serializable;
 
 /**
+ * This class is used to represent a WMS Style with its own legend.
+ * 
  * @author Simone Giannecchini, GeoSolutions SAS
  *
  */
@@ -31,10 +33,13 @@ public class WMSStyle implements Serializable {
     
     private String description;
     
+    /**URL For this style's legend.*/
     private String legendURI;
     
+    /** MIME Type for the legend*/
     private String legendMimeType;
     
+    /** Is this the default style for the enclosing layer?*/
     private boolean defaultStyle;
 
     /**

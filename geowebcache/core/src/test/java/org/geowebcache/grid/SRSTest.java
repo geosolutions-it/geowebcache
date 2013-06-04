@@ -30,14 +30,18 @@ public class SRSTest extends TestCase {
         // 4326
         SRS srs = SRS.getSRS(4326);
         assertEquals(SRS.getEPSG4326(), srs);
+        assertEquals("EPSG", srs.getAuthority());
         
         // 4326
         srs = SRS.getSRS(3857);
         assertEquals(SRS.getEPSG3857(), srs);
+        assertEquals("EPSG", srs.getAuthority());
         
         // 900913
         srs = SRS.getSRS(900913);
         assertEquals(SRS.getEPSG900913(), srs);
+        assertNotNull(srs.getAuthority());
+        assertEquals("EPSG", srs.getAuthority());
         
         // CRS:84
         srs = SRS.getSRS(84);

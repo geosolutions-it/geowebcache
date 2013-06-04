@@ -101,6 +101,13 @@ public class WMTSGetCapabilities {
         str.append("<Capabilities xmlns=\"http://www.opengis.net/wmts/1.0\"\n");
         str.append("xmlns:ows=\"http://www.opengis.net/ows/1.1\"\n"); 
         str.append("xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n");
+        
+        // ad INSPIRE specific schema in case its needed
+        final ServiceInformation serviceInformation = tld.getServiceInformation();
+        if(serviceInformation!=null&&serviceInformation.getINSPIREServiceAdditionalInformation()!=null){
+            str.append("xmlns:inspire_vs=\"http://inspire.ec.europa.eu/schemas/inspire_vs/1.0\"\n");
+            str.append("xmlns:inspire_common=\"http://inspire.ec.europa.eu/schemas/common/1.0\"\n");
+        }
         str.append("xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n");
         str.append("xmlns:gml=\"http://www.opengis.net/gml\" ");
         str.append("xsi:schemaLocation=\"http://www.opengis.net/wmts/1.0 http://schemas.opengis.net/wmts/1.0/wmtsGetCapabilities_response.xsd\"\n"); 
@@ -130,6 +137,9 @@ public class WMTSGetCapabilities {
         ServiceInformation servInfo = tld.getServiceInformation();        
         if (servInfo != null) {
             final INSPIREAdditionalInformation inspire = servInfo.getINSPIREServiceAdditionalInformation();
+            if(inspire==null){
+                return;
+            }
             str.append("<Themes>\n");
             for(Theme theme:inspire.getThemes()){
                 str.append("  <Theme>\n");
@@ -289,9 +299,10 @@ public class WMTSGetCapabilities {
             }
             layer(str, layer, baseUrl);
         }
-         
+        
+        // In case we try to support INSPIRE
         for (GridSet gset : gsb.getGridSets()) {
-            tileMatrixSet(str, gset);
+                tileMatrixSet(str, gset);
         }
          
          str.append("</Contents>\n");
@@ -306,8 +317,11 @@ public class WMTSGetCapabilities {
         } else {
             appendTag(str, "    ", "ows:Title", layerMeta.getTitle(), null);
             appendTag(str, "    ", "ows:Abstract", layerMeta.getDescription(), null);
-            for(String metadataLink:layerMeta.getMetadataLinks()){
-                appendTag(str, "    ", "ows:Metadata", encodeXmlChars(metadataLink), null);
+            final List<String> metadataLinks = layerMeta.getMetadataLinks();
+            if(metadataLinks!=null){
+                for(String metadataLink:metadataLinks){
+                    appendTag(str, "    ", "ows:Metadata", encodeXmlChars(metadataLink), null);
+                }
             }
         }
 
@@ -491,9 +505,7 @@ public class WMTSGetCapabilities {
          str.append("    <ows:Identifier>"+gridSet.getName()+"</ows:Identifier>\n");
          // If the following is not good enough, please get in touch and we will try to fix it :)
          final SRS srs = gridSet.getSrs(); // CRS:84
-         if(srs.getAuthority()!=null&&srs.getAuthority().equalsIgnoreCase("CRS")){
-             str.append("    <ows:SupportedCRS>CRS:").append(srs.getNumber()).append("</ows:SupportedCRS>\n");
-         }else if(srs.getAuthority()!=null&&srs.getAuthority().equalsIgnoreCase("EPSG")){
+         if(srs.getAuthority()!=null&&srs.getAuthority().equalsIgnoreCase("EPSG")){
              str.append("    <ows:SupportedCRS>urn:ogc:def:crs:EPSG::").append(srs.getNumber()).append("</ows:SupportedCRS>\n");
          }else if(srs.getAuthority()!=null){
              str.append("    <ows:SupportedCRS>").append(srs.getAuthority()).append(":").append(srs.getNumber()).append("</ows:SupportedCRS>\n");       

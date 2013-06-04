@@ -34,6 +34,7 @@
        
        You also need to uncomment gwcWMSConfig in the gwcTLDispatcher bean!
        -->
+       <!--
   <bean id="gwcWMSConfig" class="org.geowebcache.config.GetCapabilitiesConfiguration">
   	<constructor-arg ref="gwcGridSetBroker">
     </constructor-arg>
@@ -46,18 +47,11 @@
     <constructor-arg value="4x4">
       <description>Metatiling factors, 3x3 is usually a good compromise for vector data</description>
     </constructor-arg>
-    <constructor-arg value="map=/osgeo/mapserver/msautotest/world/world.map">
-      <description>
-          Vendor parameters, these are appended to every request sent to the backend.
-          If you use MapServer you probably want to set this to "map=name". Leave the value attribute empty if you don't need
-          to add any vendor specific parameter.
-      </description>
-    </constructor-arg>
     <constructor-arg value="false">
       <description>Whether to allow cached=false to specificed for certain requests</description>
     </constructor-arg> 
   </bean>
-  
+   -->
   <!-- For each configuration bean above, add them below to activate -->
   <bean id="gwcTLDispatcher" class="org.geowebcache.layer.TileLayerDispatcher">
     <description>

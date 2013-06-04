@@ -20,16 +20,19 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+
 public class LayerMetaInformation {
-    String title;
+    private String title;
     
-    String description;
+    private String description;
     
-    List<String> keywords=new LinkedList<String>();
+    private List<String> keywords=new LinkedList<String>();
     
-    List<ContactInformation> contacts = new LinkedList<ContactInformation>();
+    private List<ContactInformation> contacts = new LinkedList<ContactInformation>();
     
-    List<String> metadataLinks= new ArrayList<String>();
+    private List<String> metadataLinks= new ArrayList<String>();
     
     /**
      * @return the MetadataLinks
@@ -81,5 +84,10 @@ public class LayerMetaInformation {
 
     public List<ContactInformation> getContacts() {
         return contacts;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this,ToStringStyle.MULTI_LINE_STYLE);
     }
 }

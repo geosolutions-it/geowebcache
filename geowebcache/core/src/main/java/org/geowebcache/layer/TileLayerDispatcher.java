@@ -29,6 +29,7 @@ import org.geowebcache.GeoWebCacheExtensions;
 import org.geowebcache.config.Configuration;
 import org.geowebcache.config.XMLConfiguration;
 import org.geowebcache.config.XMLGridSet;
+import org.geowebcache.config.meta.INSPIREAdditionalInformation;
 import org.geowebcache.config.meta.ServiceInformation;
 import org.geowebcache.grid.GridSet;
 import org.geowebcache.grid.GridSetBroker;
@@ -205,6 +206,16 @@ public class TileLayerDispatcher implements DisposableBean {
 
     public ServiceInformation getServiceInformation() {
         return this.serviceInformation;
+    }
+    
+    public String getDefaultLanguage() {
+        if(this.serviceInformation!=null){
+            final INSPIREAdditionalInformation inspireServiceAdditionalInformation = this.serviceInformation.getINSPIREServiceAdditionalInformation();
+            if(inspireServiceAdditionalInformation!=null){
+                return inspireServiceAdditionalInformation.getDefaultLanguage();
+            }
+        }
+        return null;
     }
 
     /**

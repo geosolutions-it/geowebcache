@@ -16,6 +16,7 @@ import org.geowebcache.grid.BoundingBox;
 import org.geowebcache.grid.GridSet;
 import org.geowebcache.io.Resource;
 import org.geowebcache.layer.TileLayer;
+import org.geowebcache.layer.TileLayerDispatcher;
 import org.geowebcache.service.OWSException;
 import org.geowebcache.stats.RuntimeStats;
 import org.geowebcache.util.ServletUtils;
@@ -30,7 +31,10 @@ public class WMTSGetFeatureInfo {
 
     int j;
 
-    protected WMTSGetFeatureInfo(ConveyorTile convTile) throws OWSException {
+    private TileLayerDispatcher tld;
+    
+
+    protected WMTSGetFeatureInfo(TileLayerDispatcher tld, ConveyorTile convTile) throws OWSException {
 
         String[] keys = { "i", "j" };
 
@@ -41,13 +45,13 @@ public class WMTSGetFeatureInfo {
         try {
             i = Integer.parseInt(values.get("i"));
         } catch (NumberFormatException nfe) {
-            throw new OWSException(400, "MissingParameterValue", "I", "I was not specified");
+            throw new OWSException(400, "MissingParameterValue", "I", "I was not specified",this.tld.getDefaultLanguage());
         }
 
         try {
             j = Integer.parseInt(values.get("j"));
         } catch (NumberFormatException nfe) {
-            throw new OWSException(400, "MissingParameterValue", "J", "J was not specified");
+            throw new OWSException(400, "MissingParameterValue", "J", "J was not specified",this.tld.getDefaultLanguage());
         }
 
         this.convTile = convTile;
@@ -59,12 +63,12 @@ public class WMTSGetFeatureInfo {
         GridSet gridSet = convTile.getGridSubset().getGridSet();
         if (gridSet.getTileHeight() < j || j < 0) {
             throw new OWSException(400, "PointIJOutOfRange", "J", "J was " + j
-                    + ", must be between 0 and " + gridSet.getTileHeight());
+                    + ", must be between 0 and " + gridSet.getTileHeight(),this.tld.getDefaultLanguage());
         }
 
         if (gridSet.getTileWidth() < i || i < 0) {
             throw new OWSException(400, "PointIJOutOfRange", "I", "I was " + i
-                    + ", must be between 0 and " + gridSet.getTileWidth());
+                    + ", must be between 0 and " + gridSet.getTileWidth(),this.tld.getDefaultLanguage());
         }
 
         Resource data = null;
@@ -73,7 +77,7 @@ public class WMTSGetFeatureInfo {
             data = layer.getFeatureInfo(convTile, bbox, convTile.getGridSubset().getTileHeight(),
                     convTile.getGridSubset().getTileWidth(), i, j);
         } catch (GeoWebCacheException e) {
-            throw new OWSException(500, "NoApplicableCode", "", e.getMessage());
+            throw new OWSException(500, "NoApplicableCode", "", e.getMessage(),this.tld.getDefaultLanguage());
         }
 
         convTile.servletResp.setStatus(HttpServletResponse.SC_OK);

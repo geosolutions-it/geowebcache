@@ -137,5 +137,7 @@ public class WMTSServiceTest extends TestCase {
         assertEquals("inline;filename=wmts-getcapabilities.xml", resp.getHeader("content-disposition"));                            
     
     }
+    
+    
 
 }
