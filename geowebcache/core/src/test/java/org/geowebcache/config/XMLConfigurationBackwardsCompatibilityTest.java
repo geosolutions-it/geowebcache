@@ -235,4 +235,43 @@ public class XMLConfigurationBackwardsCompatibilityTest extends TestCase {
         tx.transform(new DOMSource(dom), new StreamResult(new OutputStreamWriter(System.out,
                 "utf-8")));
     }
+
+    public void testLoad122() throws Exception {
+    
+        XMLConfiguration config = loadConfig("geowebcache_126.xml");
+    
+        ServiceInformation serviceInfo = config.getServiceInformation();
+        assertNotNull(serviceInfo);
+        assertEquals("GeoWebCache", serviceInfo.getTitle());
+        assertEquals("GeoWebCache description.", serviceInfo.getDescription());
+    
+        // check transform from <keyowrds><keyword>... to <keywords><string>...
+        assertEquals(asList("WFS", "WMS", "WMTS", "GEOWEBCACHE"), serviceInfo.getKeywords());
+    
+        assertNotNull(serviceInfo.getAccessConstraints());
+        assertNotNull(serviceInfo.getFees());
+        assertNotNull(serviceInfo.getServiceProvider());
+        assertNotNull(serviceInfo.getServiceProvider().getProviderName());
+        assertNotNull(serviceInfo.getServiceProvider().getProviderSite());
+        assertNotNull(serviceInfo.getServiceProvider().getServiceContact());
+        assertNotNull(serviceInfo.getServiceProvider().getServiceContact()
+                .getAddressAdministrativeArea());
+        assertNotNull(serviceInfo.getServiceProvider().getServiceContact().getAddressCity());
+        assertNotNull(serviceInfo.getServiceProvider().getServiceContact().getAddressCountry());
+        assertNotNull(serviceInfo.getServiceProvider().getServiceContact().getAddressEmail());
+        assertNotNull(serviceInfo.getServiceProvider().getServiceContact().getAddressPostalCode());
+        assertNotNull(serviceInfo.getServiceProvider().getServiceContact().getAddressStreet());
+        assertNotNull(serviceInfo.getServiceProvider().getServiceContact().getAddressType());
+        assertNotNull(serviceInfo.getServiceProvider().getServiceContact().getFaxNumber());
+        assertNotNull(serviceInfo.getServiceProvider().getServiceContact().getIndividualName());
+        assertNotNull(serviceInfo.getServiceProvider().getServiceContact().getPhoneNumber());
+        assertNotNull(serviceInfo.getServiceProvider().getServiceContact().getPositionName());
+    
+        List<TileLayer> layers = config.getTileLayers();
+        TileLayer layer = findLayer(layers, "topp:states");
+        assertNotNull(layer);
+    
+        assertEquals(4, layer.getMimeTypes().size());
+        assertTrue(layer.getGridSubsets().contains("EPSG:2163"));
+    }
 }

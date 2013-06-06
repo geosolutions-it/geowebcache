@@ -42,6 +42,7 @@ import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -49,6 +50,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -72,6 +74,7 @@ import org.geowebcache.filter.request.FileRasterFilter;
 import org.geowebcache.filter.request.WMSRasterFilter;
 import org.geowebcache.grid.GridSet;
 import org.geowebcache.grid.GridSetBroker;
+import org.geowebcache.grid.SRS;
 import org.geowebcache.layer.ExpirationRule;
 import org.geowebcache.layer.TileLayer;
 import org.geowebcache.layer.meta.ContactInformation;
@@ -788,6 +791,21 @@ public class XMLConfiguration implements Configuration {
             log.error("Unable to parse file, expected gwcConfiguration at root after transform.");
             throw new ConfigurationException("Unable to parse after transform.");
         } else {
+            
+            if(log.isTraceEnabled()){
+
+                TransformerFactory tf = TransformerFactory.newInstance();
+                // identity
+                Transformer t;
+                try {
+                    t = tf.newTransformer();
+                    t.setOutputProperty(OutputKeys.INDENT, "yes");
+                    t.transform(new DOMSource(rootNode), new StreamResult(System.out));
+                } catch (Exception e1) {
+                    log.trace("Unable to log configuration being used.",e1);
+                }                
+            }
+            
             // Parsing the schema file
             try {
                 validate(rootNode);
@@ -810,6 +828,7 @@ public class XMLConfiguration implements Configuration {
     }
 
     static void validate(Node rootNode) throws SAXException, IOException {
+        
         // Perform validation
         // TODO dont know why this one suddenly failed to look up, revert to
         // XMLConstants.W3C_XML_SCHEMA_NS_URI
@@ -1005,5 +1024,8 @@ public class XMLConfiguration implements Configuration {
     public String getVersion() {
         return gwcConfig.getVersion();
     }
-
+    
+    public void readResolve(){
+        Assert.notNull(this.gwcConfig);
+    }    
 }

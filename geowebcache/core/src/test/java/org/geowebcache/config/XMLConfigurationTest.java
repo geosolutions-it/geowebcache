@@ -51,9 +51,13 @@ public class XMLConfigurationTest extends TestCase {
     private XMLConfiguration config;
 
     protected void setUp() throws Exception {
+
+        // copy the config file to the testConfig directory we are going to use for these tests
         configDir = new File("target", "testConfig");
         try{
-            FileUtils.deleteDirectory(configDir);
+            if(configDir.exists()){
+                FileUtils.deleteDirectory(configDir);
+            }
         } catch (IOException e) {
             Runtime.getRuntime().runFinalization();
             System.gc();

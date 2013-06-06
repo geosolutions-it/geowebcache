@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gwcConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                  xsi:noNamespaceSchemaLocation="http://geowebcache.org/schema/1.2.2/geowebcache.xsd" 
+                  xmlns="http://geowebcache.org/schema/1.2.2">
+<version>1.3.0</version>
+<backendTimeout>120</backendTimeout>
+
+<serviceInformation>
+	<title>SIT Comune Firenze - GeoWebCache</title>
+	<description>GeoWebCache is an advanced tile cache for WMS servers.It supports a large variety of protocols and formats, including WMS-C, WMTS, KML, Google Maps and Virtual Earth.</description>
+	<keywords>
+      <string>WFS</string>
+      <string>WMS</string>
+      <string>WMTS</string>
+      <string>GEOWEBCACHE</string>
+	</keywords>
+	<serviceProvider>
+		<providerName>Comune di Firenze</providerName>
+		<providerSite>http://www.comune.fi.it/home.htm</providerSite>
+		<serviceContact>
+		  <individualName>P.O. Gestione Risorsa Dati</individualName>
+		  <positionName>Geospatial Expert</positionName>
+		  <addressType>Work</addressType>
+		  <addressStreet>Via Reginaldo Giuliani, 250</addressStreet>
+		  <addressCity>Firenze</addressCity>
+		  <addressAdministrativeArea>FI</addressAdministrativeArea>
+		  <addressPostalCode>50141</addressPostalCode>
+		  <addressCountry>Italy</addressCountry>
+		  <phoneNumber></phoneNumber>
+		  <faxNumber></faxNumber>
+		  <addressEmail>po.gestionerisorsadati@comune.fi.it</addressEmail>
+		</serviceContact>
+	</serviceProvider>
+	<fees>NONE</fees>
+	<accessConstraints>NONE</accessConstraints>
+    <INSPIREAdditionalInformation>
+    	<defaultLanguage>en</defaultLanguage>
+    	<linkViewServiceLink>http://www.ign.es/csw-inspire/srv/es/csw?SERVICE=CSW&amp;VERSION=2.0.2&amp;REQUEST=GetRecordById&amp;outputSchema=http://www.isotc211.org/2005/gmd&amp;ElementSetName=full&amp;ID=spaignwmts_www.cartociudad.es_wmts_cartociudad_cartociudad_2013</linkViewServiceLink>
+      	<themes>
+      		<theme>
+      			<title>THEMEA blah blah</title>
+      			<identifier>THEMEA</identifier>
+      			<layerRefs>
+      				<string>refA</string>
+      				<string>refB</string>
+      			</layerRefs>
+      		</theme>
+      	</themes>    	
+    </INSPIREAdditionalInformation>      
+</serviceInformation>
+
+<gridSets>
+
+
+<!-- INIZIO GRIDSET comune firenze     --> 
+
+<!-- gridset con ingombro ridotto su comune di firenze con denominatori di scala -->
+
+ 
+  <gridSet>
+    <name>SPHERICALMERCATOR_custom</name>
+    <srs><number>900913</number></srs>
+    <extent>
+      <coords>
+		 <double>1233700</double>
+		  <double>5418400</double>
+		 <double>1269600</double>
+		 <double>5442200</double>
+      </coords>
+    </extent>
+    <resolutions>
+      <double>78271.516953125</double>
+      <double>39135.7584765625</double>
+	  <double>19567.87923828125</double>
+	  <double>9783.939619140625</double>
+	  <double>4891.9698095703125</double>
+	  <double>2445.98490478511562</double>
+	  <double>1222.9924523925781</double>
+	  <double>611.4962261962891</double>
+	  <double>305.74811309814453</double>
+	  <double>152.87405654907226</double>
+	  <double>76.43702827453613</double>
+	  <double>38.218514137268066</double>
+	  <double>19.109257068634033</double>
+	  <double>9.554628534317017</double>
+	  <double>4.777314267158508</double>
+	  <double>2.388657133579254</double>
+	  <double>1.194328566789627</double>
+	  <double>0.5971642833948135</double>
+	  <double>0.29858214169740677</double>
+	  <double>0.14929107084870338</double>
+	  <double>0.07464553542435169</double>
+    </resolutions>
+  </gridSet>
+
+
+<!-- INIZIO GRIDSET provincia firenze     --> 
+
+<!-- gridset con ingombro ridotto su provincia di firenze con denominatori di scala -->
+  <gridSet>
+    <name>SPHERICALMERCATOR_custom_profi</name>
+    <srs><number>900913</number></srs>
+    <extent>
+      <coords>
+		 <double>1189800</double>
+		 <double>5379300</double>
+		 <double>1311000</double>
+		 <double>5503700</double>
+      </coords>
+    </extent>
+    <resolutions>
+      <double>78271.516953125</double>
+      <double>39135.7584765625</double>
+	  <double>19567.87923828125</double>
+	  <double>9783.939619140625</double>
+	  <double>4891.9698095703125</double>
+	  <double>2445.98490478511562</double>
+	  <double>1222.9924523925781</double>
+	  <double>611.4962261962891</double>
+	  <double>305.74811309814453</double>
+	  <double>152.87405654907226</double>
+	  <double>76.43702827453613</double>
+	  <double>38.218514137268066</double>
+	  <double>19.109257068634033</double>
+	  <double>9.554628534317017</double>
+	  <double>4.777314267158508</double>
+	  <double>2.388657133579254</double>
+	  <double>1.194328566789627</double>
+	  <double>0.5971642833948135</double>
+	  <double>0.29858214169740677</double>
+	  <double>0.14929107084870338</double>
+	  <double>0.07464553542435169</double>
+    </resolutions>
+  </gridSet>
+
+<!-- INIZIO GRIDSET per intero planisfero     --> 
+
+<!-- gridset con ingombro su mondo intero con denominatori di scala -->
+
+ 
+  <gridSet>
+    <name>SPHERICALMERCATOR_custom_world</name>
+    <srs><number>900913</number></srs>
+    <extent>
+      <coords>
+		 <double>-20003518</double>
+		 <double>-19890504</double>
+		 <double>19928175</double>
+		 <double>19965847</double>
+      </coords>
+    </extent>
+    <resolutions>
+      <double>78271.516953125</double>
+      <double>39135.7584765625</double>
+	  <double>19567.87923828125</double>
+	  <double>9783.939619140625</double>
+	  <double>4891.9698095703125</double>
+	  <double>2445.98490478511562</double>
+	  <double>1222.9924523925781</double>
+	  <double>611.4962261962891</double>
+	  <double>305.74811309814453</double>
+	  <double>152.87405654907226</double>
+	  <double>76.43702827453613</double>
+	  <double>38.218514137268066</double>
+	  <double>19.109257068634033</double>
+	  <double>9.554628534317017</double>
+	  <double>4.777314267158508</double>
+	  <double>2.388657133579254</double>
+	  <double>1.194328566789627</double>
+	  <double>0.5971642833948135</double>
+	  <double>0.29858214169740677</double>
+	  <double>0.14929107084870338</double>
+	  <double>0.07464553542435169</double>
+    </resolutions>
+  </gridSet>
+  
+</gridSets>
+
+<layers>  
+
+  <!-- inizio layer Comune Firenze -->
+  
+   <wmsLayer>
+      <name>verdepubblico:areeverdi</name>
+      <mimeFormats>
+        <string>image/png</string>
+      </mimeFormats>
+      <gridSubsets>		  
+		  <gridSubset>
+            <gridSetName>SPHERICALMERCATOR_custom</gridSetName>
+			<extent>
+              <coords>
+                 <double>1233700</double>
+                  <double>5418400</double>
+                 <double>1269600</double>
+                 <double>5442200</double>
+              </coords>
+    		  </extent>
+          </gridSubset>	   
+      </gridSubsets>
+      <metaWidthHeight>
+        <int>3</int>
+        <int>3</int>
+      </metaWidthHeight>
+      <expireClientsList>
+        <expirationRule minZoom="0" expiration="604800" />
+      </expireClientsList>  
+      <queryable>true</queryable>	    
+      <wmsUrl>
+        <string>http://sr-vm160-sitt1:8081/geoserver_test/wms</string>
+        
+      </wmsUrl>
+      <wmsLayers>verdepubblico:areeverdi</wmsLayers>
+      <wmsStyles></wmsStyles>
+      <tiled>false</tiled>
+      <transparent>true</transparent>
+      <bgColor></bgColor>
+      <palette>areeverdi</palette>
+        
+   </wmsLayer>
+
+   
+   
+   </layers>
+ 
+ </gwcConfiguration>
+   

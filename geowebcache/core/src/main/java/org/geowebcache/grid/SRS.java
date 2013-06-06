@@ -55,7 +55,7 @@ public class SRS implements Comparable<SRS> {
 
     private int number;
     
-    transient private String authority;
+    private String authority;
 
     private transient List<Integer> aliases;
 

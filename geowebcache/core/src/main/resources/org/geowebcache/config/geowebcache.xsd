@@ -630,10 +630,17 @@
       <xs:element name="number" type="xs:integer">
         <xs:annotation>
           <xs:documentation xml:lang="en">
-            The numeric part of the EPSG code, i.e. for EPSG:4326 use "4326".
+            The numeric part of the SRS code, i.e. for EPSG:4326 use "4326".
           </xs:documentation>
         </xs:annotation>
       </xs:element>
+      <!-- xs:element name="authority" type="xs:string">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            The authority part of the code, i.e. for EPSG:4326 use "EPSG".
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element-->      
     </xs:sequence>
   </xs:complexType>
 
