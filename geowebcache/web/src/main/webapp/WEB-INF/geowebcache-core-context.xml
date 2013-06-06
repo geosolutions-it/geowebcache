@@ -33,7 +33,7 @@
        "format_options=regionate_by:auto&amp;bgcolor=0x112233" 
        
        You also need to uncomment gwcWMSConfig in the gwcTLDispatcher bean!
-       -->
+       
   <bean id="gwcWMSConfig" class="org.geowebcache.config.GetCapabilitiesConfiguration">
   	<constructor-arg ref="gwcGridSetBroker">
     </constructor-arg>
@@ -57,7 +57,7 @@
       <description>Whether to allow cached=false to specificed for certain requests</description>
     </constructor-arg> 
   </bean>
-  
+  -->
   <!-- For each configuration bean above, add them below to activate -->
   <bean id="gwcTLDispatcher" class="org.geowebcache.layer.TileLayerDispatcher">
     <description>
