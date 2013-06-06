@@ -80,6 +80,12 @@ public class SRS implements Comparable<SRS> {
 
     // called by XStream for custom initialization
     private SRS readResolve() {
+        // this is a workaround for supporting EPSG as the standard authority
+        // for SRS as in the past we were assuming that the gridset had an SRS without
+        // the authority assuming it was EPSG
+        if(authority==null){
+            authority="EPSG";
+        }
         if (!list.containsKey(Integer.valueOf(number))) {
             list.put(number, this);
         }
@@ -224,5 +230,5 @@ public class SRS implements Comparable<SRS> {
      */
     public String getAuthority() {
         return authority;
-    }
+    }  
 }

@@ -27,7 +27,6 @@ import org.geowebcache.grid.Grid;
 import org.geowebcache.grid.GridSet;
 import org.geowebcache.grid.GridSetFactory;
 import org.geowebcache.grid.SRS;
-import org.geowebcache.grid.SRSTest;
 import org.springframework.util.Assert;
 
 /**
@@ -417,13 +416,5 @@ public class XMLGridSet implements Serializable {
     @Override
     public boolean equals(Object o) {
         return EqualsBuilder.reflectionEquals(this, o);
-    }
-
-    public void readResolve(){
-        Assert.notNull(srs);
-        if(srs.getAuthority()==null){
-            srs= SRS.getSRS(srs.getNumber()); 
-        }
-        Assert.notNull(srs.getAuthority());
     }
 }

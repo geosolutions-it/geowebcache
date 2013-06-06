@@ -74,7 +74,6 @@ import org.geowebcache.filter.request.FileRasterFilter;
 import org.geowebcache.filter.request.WMSRasterFilter;
 import org.geowebcache.grid.GridSet;
 import org.geowebcache.grid.GridSetBroker;
-import org.geowebcache.grid.SRS;
 import org.geowebcache.layer.ExpirationRule;
 import org.geowebcache.layer.TileLayer;
 import org.geowebcache.layer.meta.ContactInformation;
@@ -792,7 +791,7 @@ public class XMLConfiguration implements Configuration {
             throw new ConfigurationException("Unable to parse after transform.");
         } else {
             
-            if(log.isTraceEnabled()){
+            if(log.isFatalEnabled()){
 
                 TransformerFactory tf = TransformerFactory.newInstance();
                 // identity
