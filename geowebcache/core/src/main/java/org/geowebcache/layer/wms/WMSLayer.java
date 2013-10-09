@@ -60,7 +60,7 @@ public class WMSLayer extends AbstractTileLayer {
     private static Log log = LogFactory.getLog(org.geowebcache.layer.wms.WMSLayer.class);
 
     public enum RequestType {
-        MAP, FEATUREINFO
+        MAP, FEATUREINFO, GETLEGENDGRAPHIC
     };
 
     private String[] wmsUrl;
@@ -529,10 +529,18 @@ public class WMSLayer extends AbstractTileLayer {
         params.put("SERVICE", "WMS");
 
         String request;
-        if (reqType == RequestType.MAP) {
+        switch (reqType) {
+        case MAP:
             request = "GetMap";
-        } else { // if(reqType == RequestType.FEATUREINFO) {
+            break;
+        case FEATUREINFO:
             request = "GetFeatureInfo";
+            break;
+        case GETLEGENDGRAPHIC:
+            request = "GetLegendGraphic";
+            break;            
+        default:
+            throw new RuntimeException("Unable to map request:"+reqType.toString());
         }
         params.put("REQUEST", request);
 
@@ -542,13 +550,18 @@ public class WMSLayer extends AbstractTileLayer {
         }
         params.put("VERSION", version);
 
+       
         String layers;
         if (this.wmsLayers != null && this.wmsLayers.length() != 0) {
             layers = wmsLayers;
         } else {
             layers = getName();
         }
-        params.put("LAYERS", layers);
+        if(reqType!=RequestType.GETLEGENDGRAPHIC){
+            params.put("LAYERS", layers);
+        } else {
+            params.put("LAYER", layers);
+        }
 
         if (reqType == RequestType.FEATUREINFO) {
             params.put("QUERY_LAYERS", layers);
@@ -572,53 +585,62 @@ public class WMSLayer extends AbstractTileLayer {
                 }
             }
         }
-        params.put("STYLES", styles);
 
-        if (reqType == RequestType.MAP) {
-            Boolean tmpTransparent = transparent;
-
-            if (mod != null && mod.getTransparent() != null) {
-                tmpTransparent = mod.getTransparent();
-            }
-
-            if (tmpTransparent == null || tmpTransparent) {
-                params.put("TRANSPARENT", "TRUE");
-            } else {
-                params.put("TRANSPARENT", "FALSE");
-            }
-
-            String tmpBgColor = bgColor;
-            if (mod != null && mod.getBgColor() != null) {
-                tmpBgColor = mod.getBgColor();
-            }
-
-            if (tmpBgColor != null && tmpBgColor.length() != 0) {
-                params.put("BGCOLOR", tmpBgColor);
-            }
-
-            String tmpPalette = palette;
-            if (mod != null && mod.getPalette() != null) {
-                tmpPalette = mod.getPalette();
-            }
-
-            if (tmpPalette != null && tmpPalette.length() != 0) {
-                params.put("PALETTE", tmpPalette);
-            }
+        if(reqType!=RequestType.GETLEGENDGRAPHIC){
+            params.put("STYLES", styles);
+        } else {
+            params.put("STYLE", styles);
         }
 
-        if (vendorParameters != null && vendorParameters.length() != 0) {
-            String[] vparams = vendorParameters.split("&");
-            for (String vp : vparams) {
-                if (vp.length() > 0) {
-                    String[] split = vp.split("=");
-                    String key = split[0];
-                    String val = split[1];
-                    if (key.length() > 0) {
-                        params.put(key, val);
-                    }
+        // other parameters not of interest for GETLEGENDGRAPHIC
+        if(reqType!=RequestType.GETLEGENDGRAPHIC){
+            if (reqType == RequestType.MAP) {
+                Boolean tmpTransparent = transparent;
+
+                if (mod != null && mod.getTransparent() != null) {
+                    tmpTransparent = mod.getTransparent();
+                }
+
+                if (tmpTransparent == null || tmpTransparent) {
+                    params.put("TRANSPARENT", "TRUE");
+                } else {
+                    params.put("TRANSPARENT", "FALSE");
+                }
+
+                String tmpBgColor = bgColor;
+                if (mod != null && mod.getBgColor() != null) {
+                    tmpBgColor = mod.getBgColor();
+                }
+
+                if (tmpBgColor != null && tmpBgColor.length() != 0) {
+                    params.put("BGCOLOR", tmpBgColor);
+                }
+
+                String tmpPalette = palette;
+                if (mod != null && mod.getPalette() != null) {
+                    tmpPalette = mod.getPalette();
+                }
+
+                if (tmpPalette != null && tmpPalette.length() != 0) {
+                    params.put("PALETTE", tmpPalette);
                 }
             }
+
+            if (vendorParameters != null && vendorParameters.length() != 0) {
+                String[] vparams = vendorParameters.split("&");
+                for (String vp : vparams) {
+                    if (vp.length() > 0) {
+                        String[] split = vp.split("=");
+                        String key = split[0];
+                        String val = split[1];
+                        if (key.length() > 0) {
+                            params.put(key, val);
+                        }
+                    }
+                }
+            }   
         }
+
 
         return params;
     }
@@ -851,5 +873,11 @@ public class WMSLayer extends AbstractTileLayer {
     @Override
     public List<WMSStyle> getStyles() {
         return wmsStyles;
+    }
+
+    @Override
+    public Resource getLegendGraphic(ConveyorTile tile, int height, int width, double scale,
+            MimeType format,String legendOptions) throws GeoWebCacheException {
+        return sourceHelper.makeLegendGraphic(tile, height, width, scale, format,legendOptions);
     }
 }

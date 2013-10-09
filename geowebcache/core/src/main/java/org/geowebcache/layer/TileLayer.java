@@ -345,6 +345,23 @@ public abstract class TileLayer {
         throw new GeoWebCacheException("GetFeatureInfo is not supported by this layer ("
                 + getName() + ")");
     }
+    
+    /**
+     * GetLegendGraphic template, throws exception, subclasses must override if supported.
+     * 
+     * @param convTile
+     * @param bbox
+     * @param height
+     * @param width
+     * @param x
+     * @param y
+     * @return
+     * @throws GeoWebCacheException
+     */
+    public Resource getLegendGraphic(ConveyorTile tile,int height, int width,double scale, MimeType format,String legendOptions) throws GeoWebCacheException {
+        throw new GeoWebCacheException("GetLegendGraphic is not supported by this layer ("
+                + getName() + ")");
+    }
 
     /**
      * 

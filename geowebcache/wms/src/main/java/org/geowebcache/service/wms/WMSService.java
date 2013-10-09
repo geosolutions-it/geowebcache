@@ -50,6 +50,7 @@ import org.geowebcache.storage.StorageBroker;
 import org.geowebcache.util.NullURLMangler;
 import org.geowebcache.util.ServletUtils;
 import org.geowebcache.util.URLMangler;
+import org.springframework.util.Assert;
 
 public class WMSService extends Service {
     public static final String SERVICE_WMS = "wms";
@@ -109,7 +110,7 @@ public class WMSService extends Service {
         final String encoding = request.getCharacterEncoding();
         final Map requestParameterMap = request.getParameterMap();
 
-        String[] keys = { "layers", "request", "tiled", "cached", "metatiled", "width", "height" };
+        String[] keys = { "layers", "layer", "request", "tiled", "cached", "metatiled", "width", "height" };
         Map<String, String> values = ServletUtils.selectedStringsFromMap(requestParameterMap,
                 encoding, keys);
 
@@ -122,6 +123,7 @@ public class WMSService extends Service {
             if (layers == null || layers.length() == 0) {
                 layers = ServletUtils.stringFromMap(requestParameterMap, encoding, "layer");
                 values.put("LAYERS", layers);
+                values.put("LAYER", layers); // to comply with GetLegendGraphics
             }
 
             ConveyorTile tile = new ConveyorTile(sb, layers, request, response);
@@ -250,6 +252,7 @@ public class WMSService extends Service {
         String servletBase = ServletUtils.getServletBaseURL(conv.servletReq, servletPrefix);
         String context = ServletUtils.getServletContextPath(conv.servletReq, SERVICE_PATH, servletPrefix);
 
+        // which request?
         if (tile.getHint() != null) {
             if (tile.getHint().equalsIgnoreCase("getcapabilities")) {
                 WMSGetCapabilities wmsCap = new WMSGetCapabilities(tld, tile.servletReq, servletBase, context, urlMangler);
@@ -259,11 +262,14 @@ public class WMSService extends Service {
                 try {
                     wmsFuser.writeResponse(tile.servletResp, stats);
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    throw new GeoWebCacheException(e);
                 }
             } else if (tile.getHint().equalsIgnoreCase("getfeatureinfo")) {
+                // GetFeatureInfo
                 handleGetFeatureInfo(tile);
+            } else if (tile.getHint().equalsIgnoreCase("getlegendgraphic")) {
+                // GetLegendGraphic
+                handleGetLegendGraphic(tile);         
             } else {
                 WMSRequests.handleProxy(tld, tile);
             }
@@ -272,6 +278,88 @@ public class WMSService extends Service {
                     + "but has no idea what you're trying to do?"
                     + "Please include request URL if you file a bug report.");
         }
+    }
+
+    /**
+     * @param tile
+     * @throws GeoWebCacheException 
+     */
+    private void handleGetLegendGraphic(ConveyorTile tile) throws GeoWebCacheException {
+        final TileLayer tl = tld.getTileLayer(tile.getLayerId());
+        if (tl == null) {
+            throw new GeoWebCacheException(tile.getLayerId() + " is unknown.");
+        }
+
+        // what we need for GetLegendGraphic
+        String[] keys = { "scale", "height", "width","request" ,"format", "legend_options"};
+        Map<String, String> values = ServletUtils.selectedStringsFromMap(
+                tile.servletReq.getParameterMap(), tile.servletReq.getCharacterEncoding(), keys);
+
+        // REQUEST
+        String request = values.get("request");
+        // check mandatory
+        if(request==null||!request.equalsIgnoreCase("GetLegendGraphic")){
+            throw new GeoWebCacheException("Unable to handle request :"+request==null?"null":request);
+        }
+        
+        // FORMAT
+        MimeType mimeType;
+        try {
+            mimeType = MimeType.createFromFormat(values.get("format"));
+        } catch (MimeException me) {
+            throw new GeoWebCacheException("The info_format parameter ("
+                    + values.get("info_format") + ")is missing or not recognized.");
+        }
+
+        // WIDTH & HEIGHT
+        int height, width;
+        try {
+            height = Integer.parseInt(values.get("height"));
+        } catch (NumberFormatException nfe) {
+            throw new GeoWebCacheException(
+                    "The parameters for height and width must both be positive integers.",nfe);
+        }
+        try {
+            width = Integer.parseInt(values.get("width"));
+        } catch (NumberFormatException nfe) {
+            throw new GeoWebCacheException(
+                    "The parameters for height and width must both be positive integers.",nfe);
+        }    
+        
+        // LEGEND_OPTIONS Opt
+        String legendOptions = values.get("legend_options");
+        
+        // SCALE Opt
+        double scale=Double.NaN;
+        try {
+            scale = Double.parseDouble(values.get("scale"));
+        } catch (NumberFormatException nfe) {
+            if(log.isDebugEnabled()){
+                log.debug(nfe.getLocalizedMessage(),nfe);
+            }
+            scale=Double.NaN;
+        }
+        
+        // create the tile conveyor
+        final String gridSetName=tl.getGridSubsets().iterator().next();
+        final GridSubset gridSubset = tl.getGridSubset(gridSetName);
+        Assert.notNull(gridSubset);
+        final ConveyorTile convTile = new ConveyorTile(sb, tl.getName(), gridSubset.getName(), null,mimeType, null, tile.servletReq, tile.servletResp);
+        convTile.setTileLayer(tl);
+        
+        // create query
+        Resource data = tl.getLegendGraphic(convTile, height, width, scale, mimeType,legendOptions);
+        try {
+            tile.servletResp.setContentType(mimeType.getMimeType());
+            ServletOutputStream outputStream = tile.servletResp.getOutputStream();
+            data.transferTo(Channels.newChannel(outputStream));
+            outputStream.flush();
+        } catch (IOException ioe) {
+            tile.servletResp.setStatus(500);
+            log.error(ioe.getMessage(),ioe);
+        }
+
+        
     }
 
     /**
@@ -334,7 +422,7 @@ public class WMSService extends Service {
             width = Integer.parseInt(values.get("width"));
         } catch (NumberFormatException nfe) {
             throw new GeoWebCacheException(
-                    "The parameters for height and width must both be positive integers.");
+                    "The parameters for height and width must both be positive integers.",nfe);
         }
 
         Resource data = tl.getFeatureInfo(gfiConv, bbox, height, width, x, y);
@@ -346,7 +434,7 @@ public class WMSService extends Service {
             outputStream.flush();
         } catch (IOException ioe) {
             tile.servletResp.setStatus(500);
-            log.error(ioe.getMessage());
+            log.error(ioe.getMessage(),ioe);
         }
 
     }

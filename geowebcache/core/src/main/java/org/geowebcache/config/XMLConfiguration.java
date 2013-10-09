@@ -86,6 +86,7 @@ import org.geowebcache.mime.FormatModifier;
 import org.geowebcache.seed.SeedRequest;
 import org.geowebcache.storage.DefaultStorageFinder;
 import org.geowebcache.util.ApplicationContextProvider;
+import org.geowebcache.util.XMLUtils;
 import org.springframework.util.Assert;
 import org.springframework.web.context.WebApplicationContext;
 import org.w3c.dom.Document;
@@ -791,18 +792,9 @@ public class XMLConfiguration implements Configuration {
             throw new ConfigurationException("Unable to parse after transform.");
         } else {
             
-            if(log.isFatalEnabled()){
-
-                TransformerFactory tf = TransformerFactory.newInstance();
-                // identity
-                Transformer t;
-                try {
-                    t = tf.newTransformer();
-                    t.setOutputProperty(OutputKeys.INDENT, "yes");
-                    t.transform(new DOMSource(rootNode), new StreamResult(System.out));
-                } catch (Exception e1) {
-                    log.trace("Unable to log configuration being used.",e1);
-                }                
+            // spit out if possible
+            if(log.isTraceEnabled()){
+              XMLUtils.printXML(doc);
             }
             
             // Parsing the schema file

@@ -27,7 +27,6 @@ import org.geowebcache.grid.Grid;
 import org.geowebcache.grid.GridSet;
 import org.geowebcache.grid.GridSetFactory;
 import org.geowebcache.grid.SRS;
-import org.springframework.util.Assert;
 
 /**
  * GridSet model for XStream persistence

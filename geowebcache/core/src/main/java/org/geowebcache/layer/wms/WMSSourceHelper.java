@@ -26,6 +26,7 @@ import org.geowebcache.grid.GridSubset;
 import org.geowebcache.io.ByteArrayResource;
 import org.geowebcache.io.Resource;
 import org.geowebcache.layer.TileResponseReceiver;
+import org.geowebcache.mime.MimeType;
 import org.geowebcache.mime.XMLMime;
 import org.geowebcache.util.ServletUtils;
 
@@ -83,7 +84,50 @@ public abstract class WMSSourceHelper {
         String mimeType = tile.getMimeType().getMimeType();
         makeRequest(tile, layer, wmsParams, mimeType, target);
     }
+    /**
+     * GetLegendGraphic template, throws exception, subclasses must override if supported.
+     * 
+     * @param convTile
+     * @param bbox
+     * @param height
+     * @param width
+     * @param x
+     * @param y
+     * @return
+     * @throws GeoWebCacheException
+     */
+    public Resource makeLegendGraphic(ConveyorTile tile,int height, int width,double scale, MimeType format,String legendOptions) throws GeoWebCacheException {
+        WMSLayer layer = (WMSLayer) tile.getLayer();
 
+        // fil basic params for GETLEGENDGRAPHIC
+        Map<String, String> wmsParams = layer.getWMSRequestTemplate(tile.getMimeType(),WMSLayer.RequestType.GETLEGENDGRAPHIC);
+
+        // basic params
+        wmsParams.put("FORMAT", format.getMimeType());
+        wmsParams.put("HEIGHT", String.valueOf(height));
+        wmsParams.put("WIDTH", String.valueOf(width));
+        
+        // optional params
+        if(!Double.isNaN(scale)){
+            wmsParams.put("SCALE", String.valueOf(scale));
+        }
+        if(legendOptions!=null&&legendOptions.length()>0){
+            wmsParams.put("LEGEND_OPTIONS", legendOptions);
+        }
+
+//        Map<String, String> fullParameters = tile.getFullParameters();
+//        if (fullParameters.isEmpty()) {
+//            fullParameters = layer.getDefaultParameterFilters();
+//        }
+//        wmsParams.putAll(fullParameters);
+        
+        // requested format
+        String mimeType = format.getFormat();
+        final Resource target = new ByteArrayResource(4096);
+        makeRequest(tile, layer, wmsParams, mimeType, target);
+        return target;
+    }
+    
     public Resource makeFeatureInfoRequest(ConveyorTile tile, BoundingBox bbox, int height,
             int width, int x, int y) throws GeoWebCacheException {
         WMSLayer layer = (WMSLayer) tile.getLayer();

@@ -634,13 +634,13 @@
           </xs:documentation>
         </xs:annotation>
       </xs:element>
-      <!-- xs:element name="authority" type="xs:string">
+      <xs:element name="authority" type="xs:string" maxOccurs="1" minOccurs="0">
         <xs:annotation>
           <xs:documentation xml:lang="en">
             The authority part of the code, i.e. for EPSG:4326 use "EPSG".
           </xs:documentation>
         </xs:annotation>
-      </xs:element-->      
+      </xs:element>      
     </xs:sequence>
   </xs:complexType>
 
