@@ -18,14 +18,15 @@ import java.io.Serializable;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-
 /**
  * This class contains the configuration for the cache object to use.
  * 
  * @author Nicola Lagomarsini Geosolutions
  */
 public class CacheConfiguration implements Serializable {
+
+    /** serialVersionUID */
+    private static final long serialVersionUID = 3875121032331372267L;
 
     /** Default value for the Cache memory limit */
     public static final long DEFAULT_MEMORY_LIMIT = 16 * 1024 * 1024; // 16Mb

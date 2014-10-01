@@ -135,7 +135,7 @@ public class MemoryBlobStore implements BlobStore {
         if (found) {
             Resource resource = cached.getBlob();
             obj.setBlob(resource);
-            obj.setCreated(resource.getLastModified());
+            obj.setCreated(resource.getLastModified());// TODO???
             obj.setBlobSize((int) resource.getSize());
         }
 
@@ -258,6 +258,7 @@ public class MemoryBlobStore implements BlobStore {
         } else {
             ByteArrayResource byteArrayResource = (ByteArrayResource) obj.getBlob();
             byte[] contents = byteArrayResource.getContents();
+            
             Resource blob = new ByteArrayResource(Arrays.copyOf(contents, contents.length));
             cached = TileObject.createCompleteTileObject(obj.getLayerName(), obj.getXYZ(),
                     obj.getGridSetId(), obj.getBlobFormat(), obj.getParameters(), blob);

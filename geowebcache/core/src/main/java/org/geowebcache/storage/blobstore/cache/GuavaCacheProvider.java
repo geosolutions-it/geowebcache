@@ -36,10 +36,20 @@ import com.google.common.cache.Weigher;
 public class GuavaCacheProvider implements CacheProvider {
 
     /** {@link Log} object used for reporting informations */
-    public static Log LOG = LogFactory.getLog(GuavaCacheProvider.class);
+    private final static Log LOG = LogFactory.getLog(GuavaCacheProvider.class);
 
     /** Separator char used for creating Cache keys */
     public final static String SEPARATOR = "_";
+    
+    public static class GuavaCacheStatistics extends CacheStatistics{
+
+        public GuavaCacheStatistics(CacheStats stats) {
+            this.setEvictionCount(stats.evictionCount());
+            this.setHitCount(stats.hitCount());
+            this.setMissCount(getMissCount());
+        }
+    
+    }
 
     /** {@link CacheConfiguration} object used for creating the cache */
     private CacheConfiguration configuration;
@@ -129,7 +139,7 @@ public class GuavaCacheProvider implements CacheProvider {
         String id = generateTileKey(obj);
         // TODO This operation is not atomic
         cache.put(id, obj);
-        multimap.insertNewTile(obj.getLayerName(), id);
+        multimap.putTile(obj.getLayerName(), id);
     }
 
     @Override
@@ -179,15 +189,20 @@ public class GuavaCacheProvider implements CacheProvider {
                 + Arrays.toString(obj.getXYZ()) + SEPARATOR + obj.getBlobFormat();
     }
 
+    /**
+     * 
+     * @author Nicola Lagomarsini, GeoSolutions
+     *
+     */
     static class LayerMap {
 
-        private ConcurrentHashMap<String, Set<String>> layerMap;
+        private final ConcurrentHashMap<String, Set<String>> layerMap = new ConcurrentHashMap<String, Set<String>>();
 
         public LayerMap() {
-            layerMap = new ConcurrentHashMap<String, Set<String>>();
+            
         }
 
-        public void insertNewTile(String layer, String id) {
+        public void putTile(String layer, String id) {
             Set<String> tileKeys = null;
             synchronized (layerMap) {
                 // Check if the multimap contains the keys for the image
@@ -215,6 +230,8 @@ public class GuavaCacheProvider implements CacheProvider {
             }
         }
 
+        // TODO if layer is present
+        // TODO return existing Set of tiles
         public void removeLayer(String layer) {
             layerMap.remove(layer);
         }

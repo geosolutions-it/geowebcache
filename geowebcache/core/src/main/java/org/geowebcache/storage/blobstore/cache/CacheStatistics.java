@@ -15,8 +15,16 @@
 package org.geowebcache.storage.blobstore.cache;
 
 import java.io.Serializable;
-
+/**
+ * 
+ * @author Nicola Lagomarsini, GeoSolutions
+ *
+ */
 public class CacheStatistics implements Serializable {
+
+    /** serialVersionUID */
+    private static final long serialVersionUID = -1049287017217353112L;
+
     private long hitCount = 0;
 
     private long missCount = 0;

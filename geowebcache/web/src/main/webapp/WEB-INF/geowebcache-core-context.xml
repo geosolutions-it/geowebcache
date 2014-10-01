@@ -188,7 +188,7 @@
     <property name="hardMemoryLimit" value="268435456"/> <!-- 256 Mb -->
   </bean>
   
-    <bean id="guavaCacheProvider" class="org.geowebcache.storage.blobstore.cache.GuavaCacheProvider">
+   <bean id="guavaCacheProvider" class="org.geowebcache.storage.blobstore.cache.GuavaCacheProvider">
     <property name="configuration" ref="cacheConfiguration"/>
   </bean>
   
