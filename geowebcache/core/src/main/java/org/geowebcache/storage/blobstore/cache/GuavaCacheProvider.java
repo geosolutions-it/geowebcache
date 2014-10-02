@@ -18,10 +18,15 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.geowebcache.storage.TileObject;
+import org.geowebcache.storage.blobstore.cache.CacheConfiguration.EvictionPolicy;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -35,48 +40,49 @@ import com.google.common.cache.Weigher;
  */
 public class GuavaCacheProvider implements CacheProvider {
 
-    /** {@link Log} object used for reporting informations */
-    private final static Log LOG = LogFactory.getLog(GuavaCacheProvider.class);
-
     /** Separator char used for creating Cache keys */
     public final static String SEPARATOR = "_";
     
-    public static class GuavaCacheStatistics extends CacheStatistics{
+    public final static long BYTES_TO_MB = 1048576;
+
+    public static class GuavaCacheStatistics extends CacheStatistics {
+
+        /** serialVersionUID */
+        private static final long serialVersionUID = 1L;
 
         public GuavaCacheStatistics(CacheStats stats) {
             this.setEvictionCount(stats.evictionCount());
             this.setHitCount(stats.hitCount());
-            this.setMissCount(getMissCount());
+            this.setMissCount(stats.missCount());
+            this.setTotalCount(stats.requestCount());
+            this.setHitRate((int)(stats.hitRate()*100));
+            this.setMissRate(100 - getHitRate());
         }
-    
     }
-
-    /** {@link CacheConfiguration} object used for creating the cache */
-    private CacheConfiguration configuration;
 
     /** Cache object containing the various {@link TileObject}s */
     private Cache<String, TileObject> cache;
 
     private LayerMap multimap;
 
-    private CacheStatistics cacheStatistics;
+    private AtomicBoolean configured;
 
-    private long maxMemory = 0;
+    private AtomicLong actualOperations;
 
-    private int concurrency = 0;
+    private final ConcurrentSkipListSet<String> layers;
 
     public GuavaCacheProvider() {
-        cacheStatistics = new CacheStatistics();
+        layers = new ConcurrentSkipListSet<String>();
+        configured = new AtomicBoolean(false);
+        actualOperations = new AtomicLong(0);
     }
 
-    private void initCache(int concurrency, long maxMemory) {
-
-        if (this.concurrency == 0 && this.maxMemory == 0) {
-            this.concurrency = concurrency;
-            this.maxMemory = maxMemory;
-        } else if (this.concurrency == concurrency && this.maxMemory == maxMemory) {
-            return;
-        }
+    private void initCache(CacheConfiguration configuration) {
+        // Initialization step
+        int concurrency = configuration.getConcurrencyLevel();
+        long maxMemory = configuration.getHardMemoryLimit() * BYTES_TO_MB;
+        long evictionTime = configuration.getEvictionTime();
+        EvictionPolicy policy = configuration.getPolicy();
 
         // If Cache already exists, flush it
         if (cache != null) {
@@ -102,86 +108,142 @@ public class GuavaCacheProvider implements CacheProvider {
                         multimap.removeTile(obj.getLayerName(), generateTileKey(obj));
                     }
                 });
+        if (policy != null && evictionTime > 0) {
+            if (policy == EvictionPolicy.EXPIRE_AFTER_ACCESS) {
+                newBuilder.expireAfterAccess(evictionTime, TimeUnit.SECONDS);
+            } else if (policy == EvictionPolicy.EXPIRE_AFTER_WRITE) {
+                newBuilder.expireAfterWrite(evictionTime, TimeUnit.SECONDS);
+            }
+        }
+
         // Build the cache
         cache = newBuilder.build();
 
         // Created a new multimap
         multimap = new LayerMap();
-    }
 
-    @Override
-    public CacheConfiguration getConfiguration() {
-        return configuration;
+        // Update the configured parameter
+        configured.getAndSet(true);
     }
 
     @Override
     public synchronized void setConfiguration(CacheConfiguration configuration) {
-        this.configuration = configuration;
-        initCache(configuration.getConcurrencyLevel(), configuration.getHardMemoryLimit());
+        if (!configured.get()) {
+            initCache(configuration);
+        }
     }
 
     @Override
     public TileObject getTileObj(TileObject obj) {
-        if (configuration.getLayers() != null && !configuration.getLayers().isEmpty()
-                && configuration.getLayers().contains(obj.getLayerName())) {
-            return null;
+        if (configured.get()) {
+            actualOperations.incrementAndGet();
+            try {
+                if (layers.contains(obj.getLayerName())) {
+                    return null;
+                }
+                String id = generateTileKey(obj);
+                return cache.getIfPresent(id);
+            } finally {
+                actualOperations.decrementAndGet();
+            }
         }
-        String id = generateTileKey(obj);
-        return cache.getIfPresent(id);
+        return null;
     }
 
     @Override
     public void putTileObj(TileObject obj) {
-        if (configuration.getLayers() != null && !configuration.getLayers().isEmpty()
-                && configuration.getLayers().contains(obj.getLayerName())) {
-            return;
+        if (configured.get()) {
+            actualOperations.incrementAndGet();
+            try {
+                if (layers.contains(obj.getLayerName())) {
+                    return;
+                }
+                String id = generateTileKey(obj);
+                // TODO This operation is not atomic
+                cache.put(id, obj);
+                multimap.putTile(obj.getLayerName(), id);
+            } finally {
+                actualOperations.decrementAndGet();
+            }
         }
-        String id = generateTileKey(obj);
-        // TODO This operation is not atomic
-        cache.put(id, obj);
-        multimap.putTile(obj.getLayerName(), id);
     }
 
     @Override
     public void removeTileObj(TileObject obj) {
-        if (configuration.getLayers() != null && !configuration.getLayers().isEmpty()
-                && configuration.getLayers().contains(obj.getLayerName())) {
-            return;
+        if (configured.get()) {
+            actualOperations.incrementAndGet();
+            try {
+                if (layers.contains(obj.getLayerName())) {
+                    return;
+                }
+                String id = generateTileKey(obj);
+                cache.invalidate(id);
+            } finally {
+                actualOperations.decrementAndGet();
+            }
         }
-        String id = generateTileKey(obj);
-        cache.invalidate(id);
     }
 
     @Override
     public void removeLayer(String layername) {
-        if (configuration.getLayers() != null && !configuration.getLayers().isEmpty()
-                && configuration.getLayers().contains(layername)) {
-            return;
-        }
-        Set<String> keys = multimap.getLayerIds(layername);
-        if (keys != null) {
-            cache.invalidateAll(keys);
+        if (configured.get()) {
+            actualOperations.incrementAndGet();
+            try {
+                if (layers.contains(layername)) {
+                    return;
+                }
+                Set<String> keys = multimap.removeLayer(layername);
+                if (keys != null) {
+                    cache.invalidateAll(keys);
+                }
+            } finally {
+                actualOperations.decrementAndGet();
+            }
         }
     }
 
     @Override
-    public synchronized void clearCache() {
-        if (cache != null) {
-            cache.invalidateAll();
+    public void clearCache() {
+        if (configured.get()) {
+            actualOperations.incrementAndGet();
+            try {
+                if (cache != null) {
+                    cache.invalidateAll();
+                }
+            } finally {
+                actualOperations.decrementAndGet();
+            }
+        }
+    }
+
+    @Override
+    public void resetCache() {
+        if (configured.getAndSet(false)) {
+            // Avoid to call the While cycle before having started an operation with configured == true
+            actualOperations.incrementAndGet();
+            actualOperations.decrementAndGet();
+            // Wait until all the operations are finished
+            while (actualOperations.get() > 0) {
+            }
+            if (cache != null) {
+                cache.invalidateAll();
+            }
+            layers.clear();
         }
     }
 
     @Override
     public CacheStatistics getStats() {
-        if (cache == null) {
-            return cacheStatistics;
+        if (configured.get()) {
+            actualOperations.incrementAndGet();
+            try {
+                return new GuavaCacheStatistics(cache.stats());
+            } finally {
+                actualOperations.decrementAndGet();
+            }
+        } else {
+            return new CacheStatistics();
         }
-        CacheStats stats = cache.stats();
-        cacheStatistics.setEvictionCount(stats.evictionCount());
-        cacheStatistics.setHitCount(stats.hitCount());
-        cacheStatistics.setMissCount(stats.missCount());
-
-        return cacheStatistics;
     }
 
     public static String generateTileKey(TileObject obj) {
@@ -189,55 +251,126 @@ public class GuavaCacheProvider implements CacheProvider {
                 + Arrays.toString(obj.getXYZ()) + SEPARATOR + obj.getBlobFormat();
     }
 
+    @Override
+    public void addUncachedLayer(String layername) {
+        if (configured.get()) {
+            actualOperations.incrementAndGet();
+            try {
+                layers.add(layername);
+            } finally {
+                actualOperations.decrementAndGet();
+            }
+        }
+    }
+
+    @Override
+    public void removeUncachedLayer(String layername) {
+        if (configured.get()) {
+            actualOperations.incrementAndGet();
+            try {
+                layers.remove(layername);
+            } finally {
+                actualOperations.decrementAndGet();
+            }
+        }
+    }
+
+    @Override
+    public boolean containsUncachedLayer(String layername) {
+        if (configured.get()) {
+            actualOperations.incrementAndGet();
+            try {
+                return layers.contains(layername);
+            } finally {
+                actualOperations.decrementAndGet();
+            }
+        } else {
+            return false;
+        }
+    }
+
     /**
      * 
      * @author Nicola Lagomarsini, GeoSolutions
-     *
+     * 
      */
     static class LayerMap {
+
+        private final ReentrantReadWriteLock lock;
+
+        private final WriteLock writeLock;
+
+        private final ReadLock readLock;
 
         private final ConcurrentHashMap<String, Set<String>> layerMap = new ConcurrentHashMap<String, Set<String>>();
 
         public LayerMap() {
-            
+            lock = new ReentrantReadWriteLock(true);
+            writeLock = lock.writeLock();
+            readLock = lock.readLock();
         }
 
         public void putTile(String layer, String id) {
-            Set<String> tileKeys = null;
-            synchronized (layerMap) {
-                // Check if the multimap contains the keys for the image
-                tileKeys = layerMap.get(layer);
-                if (tileKeys == null) {
-                    // If no key is present then a new KeySet is created and then added to the multimap
-                    tileKeys = new ConcurrentSkipListSet<String>();
-                    layerMap.put(layer, tileKeys);
+            readLock.lock();
+            Set<String> tileKeys = layerMap.get(layer);
+            if (tileKeys == null) {
+                readLock.unlock();
+                writeLock.lock();
+                try {
+                    if (tileKeys == null) {
+                        // If no key is present then a new KeySet is created and then added to the multimap
+                        tileKeys = new ConcurrentSkipListSet<String>();
+                        layerMap.put(layer, tileKeys);
+                    }
+                    readLock.lock();
+                } finally {
+                    writeLock.unlock();
                 }
             }
-            // Finally the tile key is added.
-            tileKeys.add(id);
+            try {
+                // Finally the tile key is added.
+                tileKeys.add(id);
+            } finally {
+                readLock.unlock();
+            }
         }
 
         public void removeTile(String layer, String id) {
-            // KeySet associated to the image
-            Set<String> tileKeys = layerMap.get(layer);
-            if (tileKeys != null) {
-                // Removal of the keys
-                tileKeys.remove(id);
-                // If the KeySet is empty then it is removed from the multimap
-                if (tileKeys.isEmpty()) {
-                    removeLayer(layer);
+            readLock.lock();
+            try {
+                // KeySet associated to the image
+                Set<String> tileKeys = layerMap.get(layer);
+                if (tileKeys != null) {
+                    // Removal of the keys
+                    tileKeys.remove(id);
+                    // If the KeySet is empty then it is removed from the multimap
+                    if (tileKeys.isEmpty()) {
+                        readLock.unlock();
+                        writeLock.lock();
+                        try {
+                            if (tileKeys.isEmpty()) {
+                                removeLayer(layer);
+                            }
+                        } finally {
+                            writeLock.unlock();
+                        }
+                        readLock.lock();
+                    }
                 }
+            } finally {
+                readLock.unlock();
             }
         }
 
-        // TODO if layer is present
-        // TODO return existing Set of tiles
-        public void removeLayer(String layer) {
-            layerMap.remove(layer);
-        }
-
-        public Set<String> getLayerIds(String layer) {
-            return layerMap.get(layer);
+        public Set<String> removeLayer(String layer) {
+            writeLock.lock();
+            try {
+                Set<String> layers = layerMap.get(layer);
+                layerMap.remove(layer);
+                return layers;
+            } finally {
+                writeLock.unlock();
+            }
         }
     }
 }

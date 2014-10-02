@@ -93,7 +93,7 @@
   </bean -->
   
   <bean id="gwcStorageBroker" class="org.geowebcache.storage.DefaultStorageBroker" destroy-method="destroy">
-    <constructor-arg ref="gwcMemoryBlobStore" />
+    <constructor-arg ref="gwcBlobStore" />
     <constructor-arg ref="gwcTransientCache" />
   </bean>
   
@@ -185,7 +185,7 @@
   <!-- New beans created -->
   
   <bean id="cacheConfiguration" class="org.geowebcache.storage.blobstore.cache.CacheConfiguration">
-    <property name="hardMemoryLimit" value="268435456"/> <!-- 256 Mb -->
+    <property name="hardMemoryLimit" value="67108864"/> <!-- 64 Mb -->
   </bean>
   
    <bean id="guavaCacheProvider" class="org.geowebcache.storage.blobstore.cache.GuavaCacheProvider">

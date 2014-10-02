@@ -622,6 +622,7 @@ public class GeoWebCacheDispatcher extends AbstractController {
             return;
         }
 
+        // Searches for a 
         BlobStore privateStore = null;
         try {
             Field privateblobStore = storageBroker.getClass().getDeclaredField("blobStore");
@@ -662,8 +663,10 @@ public class GeoWebCacheDispatcher extends AbstractController {
         long hitCount = statistics.getHitCount();
         long missCount = statistics.getMissCount();
         long evictionCount = statistics.getEvictionCount();
-
-        long totalRequests = hitCount + missCount;
+        long requestCount = statistics.getRequestCount();
+        double hitRate = statistics.getHitRate();
+        double missRate = statistics.getMissRate();
+        
         
         StringBuilder str = new StringBuilder();
 
@@ -672,35 +675,25 @@ public class GeoWebCacheDispatcher extends AbstractController {
         str.append("<table border=\"0\" cellspacing=\"5\">");
 
         str.append("<tr><td colspan=\"2\">Total number of requests:</td><td colspan=\"3\">"
-                + totalRequests);
+                + requestCount);
         str.append("</td></tr>\n");
 
         str.append("<tr><td colspan=\"5\"> </td></tr>");
+        
+        str.append("<tr><td colspan=\"2\">Internal Cache hit count:</td><td colspan=\"3\">");
+        str.append(hitCount);
+        str.append("</td></tr>\n");
+        
+        str.append("<tr><td colspan=\"2\">Internal Cache miss count:</td><td colspan=\"3\">");
+        str.append(missCount);
+        str.append("</td></tr>\n");
 
         str.append("<tr><td colspan=\"2\">Internal Cache hit ratio:</td><td colspan=\"3\">");
-        if (totalRequests > 0) {
-            double hitPercentage = (hitCount * 100.0) / (totalRequests);
-            int rounded = (int) Math.round(hitPercentage * 100.0);
-            int percents = rounded / 100;
-            int decimals = rounded - percents * 100;
-            str.append(percents + "." + decimals + "% of requests");
-        } else {
-            str.append("No data");
-        }
-
+        str.append(hitRate + " %");
         str.append("</td></tr>\n");
 
         str.append("<tr><td colspan=\"2\">Internal Cache miss ratio:</td><td colspan=\"3\">");
-        if (totalRequests > 0) {
-            double missPercentage = (missCount * 100.0) / (totalRequests);
-            int rounded = (int) Math.round(missPercentage * 100.0);
-            int percents = rounded / 100;
-            int decimals = rounded - percents * 100;
-            str.append(percents + "." + decimals + "% of requests");
-        } else {
-            str.append("No data");
-        }
-
+        str.append(missRate + " %");
         str.append("</td></tr>\n");
 
         str.append("<tr><td colspan=\"5\"> </td></tr>");

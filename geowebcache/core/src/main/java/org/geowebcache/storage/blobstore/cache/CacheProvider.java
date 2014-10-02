@@ -19,11 +19,6 @@ import org.geowebcache.storage.TileObject;
 public interface CacheProvider {
 
     /**
-     * Returns the {@link CacheConfiguration} object used by the CacheProvider
-     */
-    public CacheConfiguration getConfiguration();
-
-    /**
      * Returns the {@link TileObject} for the selected id
      */
     public TileObject getTileObj(TileObject obj);
@@ -53,6 +48,8 @@ public interface CacheProvider {
      * Removes all the cached {@link TileObject}s
      */
     public void clearCache();
+    
+    public void resetCache();
 
     /**
      * Returns a {@link CacheStatistics} object containing the current cache statistics.
@@ -65,4 +62,10 @@ public interface CacheProvider {
      * @param configuration
      */
     void setConfiguration(CacheConfiguration configuration);
+    
+    public void addUncachedLayer(String layername);
+    
+    public void removeUncachedLayer(String layername);
+    
+    public boolean containsUncachedLayer(String layername);
 }

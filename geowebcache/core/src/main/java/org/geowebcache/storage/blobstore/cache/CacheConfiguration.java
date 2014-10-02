@@ -15,8 +15,6 @@
 package org.geowebcache.storage.blobstore.cache;
 
 import java.io.Serializable;
-import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * This class contains the configuration for the cache object to use.
@@ -31,35 +29,35 @@ public class CacheConfiguration implements Serializable {
     /** Default value for the Cache memory limit */
     public static final long DEFAULT_MEMORY_LIMIT = 16 * 1024 * 1024; // 16Mb
 
+    /** Evction policy */
+    public enum EvictionPolicy {
+        LRU, LFU, EXPIRE_AFTER_WRITE, EXPIRE_AFTER_ACCESS, NULL;
+
+        public static EvictionPolicy getEvictionPolicy(String policy) {
+            if (policy == null || policy.isEmpty()) {
+                return NULL;
+            }
+            return valueOf(policy);
+        }
+    }
+
     /** Default value for the cache concurrency level */
     public static final int DEFAULT_CONCURRENCY_LEVEL = 4;
+
+    /** Default value for the eviction time */
+    public static final long DEFAULT_EVICTION_TIME = 1;
 
     /** Parameter associated to the Cache memory limit */
     private long hardMemoryLimit = DEFAULT_MEMORY_LIMIT;
 
-    /** Parameter associated to Layers to skip when caching */
-    private Set<String> layers = new ConcurrentSkipListSet<String>();
-
-    /** Parameter associated to the Cache eviction policy */
-    private String policy = "";
+    /** Cache eviction policy */
+    private EvictionPolicy policy;
 
     /** Parameter associated to the Cache concurrency level */
     private int concurrencyLevel = DEFAULT_CONCURRENCY_LEVEL;
 
-    public CacheConfiguration() {
-
-    }
-
-    public CacheConfiguration(CacheConfiguration config) {
-        this.concurrencyLevel = config.getConcurrencyLevel();
-        this.hardMemoryLimit = config.getHardMemoryLimit();
-        this.policy = new String(config.getPolicy());
-
-        if (config.getLayers() != null) {
-            this.layers = new ConcurrentSkipListSet<String>(config.getLayers());
-        }
-
-    }
+    /** Start Value */
+    private long evictionTime = DEFAULT_EVICTION_TIME;
 
     /**
      * @return the current cache memory limit
@@ -78,39 +76,18 @@ public class CacheConfiguration implements Serializable {
     }
 
     /**
-     * @return the actual collection of layers to skip when caching
-     */
-    public Set<String> getLayers() {
-        return layers;
-    }
-
-    /**
-     * Adds new Layers to avoid caching
-     * 
-     * @param layers
-     */
-    public synchronized void setLayers(Set<String> layers) {
-        if (this.layers == null) {
-            this.layers = new ConcurrentSkipListSet<>();
-        }
-        if (layers != null) {
-            this.layers.addAll(layers);
-        }
-    }
-
-    /**
      * @return The cache eviction policy
      */
-    public String getPolicy() {
+    public EvictionPolicy getPolicy() {
         return policy;
     }
 
     /**
-     * Sets a new cache eviction policy
+     * Sets the Cache eviction policy
      * 
      * @param policy
      */
-    public void setPolicy(String policy) {
+    public void setPolicy(EvictionPolicy policy) {
         this.policy = policy;
     }
 
@@ -130,6 +107,22 @@ public class CacheConfiguration implements Serializable {
         this.concurrencyLevel = concurrencyLevel;
     }
 
+    /**
+     * @return the cache eviction time
+     */
+    public long getEvictionTime() {
+        return evictionTime;
+    }
+
+    /**
+     * Sets the cache eviction time
+     * 
+     * @param evictionTime
+     */
+    public void setEvictionTime(long evictionTime) {
+        this.evictionTime = evictionTime;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -144,12 +137,11 @@ public class CacheConfiguration implements Serializable {
         CacheConfiguration config = (CacheConfiguration) obj;
         if (this.concurrencyLevel != config.concurrencyLevel) {
             return false;
-        } else if (!this.policy.equals(config.policy)) {
+        } else if (!(this.policy == config.policy)) {
             return false;
         } else if (this.hardMemoryLimit != config.hardMemoryLimit) {
             return false;
-        } else if ((layers == null || layers.isEmpty())
-                && !(config.layers == null || config.layers.isEmpty())) {
+        } else if (this.evictionTime != config.evictionTime) {
             return false;
         }
 

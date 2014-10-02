@@ -72,15 +72,15 @@ public class MemoryCacheStatsResource extends Resource {
 
             MemoryBlobStore memoryStore = (MemoryBlobStore) store;
             CacheStatistics stats = memoryStore.getCacheStatistics();
-
+            CacheStatistics statistics = new CacheStatistics(stats);
             if ("json".equals(formatExtension)) {
                 try {
-                    representation = getJsonRepresentation(stats);
+                    representation = getJsonRepresentation(statistics);
                 } catch (JSONException e) {
                     throw new RuntimeException(e);
                 }
             } else if ("xml".equals(formatExtension)) {
-                representation = getXmlRepresentation(stats);
+                representation = getXmlRepresentation(statistics);
             } else {
                 response.setStatus(Status.CLIENT_ERROR_BAD_REQUEST,
                         "Unknown or missing format extension : " + formatExtension);

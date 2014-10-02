@@ -30,6 +30,25 @@ public class CacheStatistics implements Serializable {
     private long missCount = 0;
 
     private long evictionCount = 0;
+    
+    private long totalCount = 0;
+    
+    private double hitRate = 0;
+    
+    private double missRate = 0;
+    
+    public CacheStatistics(){
+    }
+
+    // Copy Constructor
+    public CacheStatistics(CacheStatistics stats) {
+        this.setEvictionCount(stats.getEvictionCount());
+        this.setHitCount(stats.getHitCount());
+        this.setMissCount(stats.getMissCount());
+        this.setTotalCount(stats.getRequestCount());
+        this.setHitRate(stats.getHitRate());
+        this.setMissRate(stats.getMissRate());
+    }
 
     public long getHitCount() {
         return hitCount;
@@ -53,5 +72,29 @@ public class CacheStatistics implements Serializable {
 
     public void setEvictionCount(long evictionCount) {
         this.evictionCount = evictionCount;
+    }
+
+    public long getRequestCount() {
+        return totalCount;
+    }
+
+    public void setTotalCount(long totalCount) {
+        this.totalCount = totalCount;
+    }
+
+    public double getHitRate() {
+        return hitRate;
+    }
+
+    public void setHitRate(double hitRate) {
+        this.hitRate = hitRate;
+    }
+
+    public double getMissRate() {
+        return missRate;
+    }
+
+    public void setMissRate(double missRate) {
+        this.missRate = missRate;
     }
 }
