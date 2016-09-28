@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.geowebcache.config.legends.LegendInfo;
 import org.geowebcache.config.meta.ServiceContact;
 import org.geowebcache.config.meta.ServiceInformation;
 import org.geowebcache.config.meta.ServiceProvider;
@@ -481,12 +482,12 @@ public class WMTSGetCapabilities {
      
      private void layerStyles(XMLBuilder xml, TileLayer layer, List<ParameterFilter> filters) throws IOException {
          String defStyle = layer.getStyles();
-         Map<String, TileLayer.LegendInfo> legendsInfo = layer.getLegendsInfo();
+         Map<String, LegendInfo> legendsInfo = layer.getLegendsInfo();
          if(filters == null) {
              xml.indentElement("Style");
              xml.attribute("isDefault", "true");
              if(defStyle == null) {
-                 xml.simpleElement("ows:Identifier", "", true);
+                 xml.simpleElement("ows:Identifier", "", true); 
              } else {
                  xml.simpleElement("ows:Identifier", TileLayer.encodeDimensionValue(defStyle), true);
              }
@@ -538,18 +539,18 @@ public class WMTSGetCapabilities {
          }
      }
 
-    private void encodeStyleLegenGraphic(XMLBuilder xml, TileLayer.LegendInfo legendInfo) throws IOException {
+    private void encodeStyleLegenGraphic(XMLBuilder xml, LegendInfo legendInfo) throws IOException {
         if (legendInfo == null) {
             return;
         }
         xml.indentElement("LegendURL");
-        xml.attribute("width", String.valueOf(legendInfo.width));
-        xml.attribute("height", String.valueOf(legendInfo.height));
-        if (legendInfo.format != null) {
-            xml.attribute("format", legendInfo.format);
+        xml.attribute("width", String.valueOf(legendInfo.getWidth()));
+        xml.attribute("height", String.valueOf(legendInfo.getHeight()));
+        if (legendInfo.getFormat() != null) {
+            xml.attribute("format", legendInfo.getFormat());
         }
-        if(legendInfo.legendUrl != null) {
-            xml.attribute("xlink:href", legendInfo.legendUrl);
+        if(legendInfo.getLegendUrl() != null) {
+            xml.attribute("xlink:href", legendInfo.getLegendUrl());
         }
         xml.endElement("LegendURL");
     }

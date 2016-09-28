@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geowebcache.GeoWebCacheException;
+import org.geowebcache.config.legends.LegendInfo;
 import org.geowebcache.conveyor.ConveyorTile;
 import org.geowebcache.filter.parameters.ParameterFilter;
 import org.geowebcache.filter.request.RequestFilter;
@@ -245,26 +246,7 @@ public abstract class TileLayer {
      * Returns legend info indexed by style.
      */
     public Map<String, LegendInfo> getLegendsInfo() {
-        return Collections.EMPTY_MAP;
-    }
-
-    /**
-     * Information container for a style legend.
-     */
-    public static class LegendInfo {
-
-        public String id;
-        public int width;
-        public int height;
-        public String format;
-        public String legendUrl;
-    }
-
-    /**
-     * Helper constructor for legend info;
-     */
-    public static LegendInfo createLegendInfo() {
-        return new LegendInfo();
+        return Collections.emptyMap();
     }
 
     /**

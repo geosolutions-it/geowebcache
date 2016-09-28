@@ -37,6 +37,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geowebcache.GeoWebCacheException;
+import org.geowebcache.config.legends.LegendInfo;
 import org.geowebcache.config.meta.ServiceContact;
 import org.geowebcache.config.meta.ServiceInformation;
 import org.geowebcache.config.meta.ServiceProvider;
@@ -354,10 +355,11 @@ public class WMSGetCapabilities {
                 }
 
                 List<String> styles = getStyles(layer.getParameterFilters());
+                Map<String, LegendInfo> legendsInfo = layer.getLegendsInfo();
                 for (String format : formats) {
                     for (String style : styles) {
                         try {
-                            capabilityVendorSpecificTileset(xml, layer, grid, format, style);
+                            capabilityVendorSpecificTileset(xml, layer, grid, format, style, legendsInfo.get(style));
                         } catch (GeoWebCacheException e) {
                             log.error(e.getMessage());
                         }
@@ -393,7 +395,7 @@ public class WMSGetCapabilities {
     }
 
     private void capabilityVendorSpecificTileset(XMLBuilder xml, TileLayer layer,
-            GridSubset grid, String formatStr, String styleName) throws GeoWebCacheException, IOException {
+            GridSubset grid, String formatStr, String styleName, LegendInfo legendInfo) throws GeoWebCacheException, IOException {
 
         String srsStr = grid.getSRS().toString();
         StringBuilder resolutionsStr = new StringBuilder();
@@ -415,9 +417,34 @@ public class WMSGetCapabilities {
         xml.simpleElement("Height", Integer.toString(grid.getTileHeight()), true);
         xml.simpleElement("Format", formatStr, true);
         xml.simpleElement("Layers", layer.getName(), true);
-        xml.simpleElement("Styles", ServletUtils.URLEncode(styleName), true);
+        xml.indentElement("Styles");
+        xml.indentElement("Style");
+        xml.simpleElement("ows:Identifier", ServletUtils.URLEncode(styleName), true);
+        encodeStyleLegendGraphic(xml, legendInfo);
+        xml.endElement();
 
         xml.endElement();
+        xml.endElement();
+    }
+
+    /**
+     * XML encodes the provided legend information. If the provided information legend is NULL
+     * nothing is done.
+     */
+    private void encodeStyleLegendGraphic(XMLBuilder xml, LegendInfo legendInfo) throws IOException {
+        if (legendInfo == null) {
+            return;
+        }
+        xml.indentElement("LegendURL");
+        xml.attribute("width", String.valueOf(legendInfo.getWidth()));
+        xml.attribute("height", String.valueOf(legendInfo.getHeight()));
+        if (legendInfo.getFormat() != null) {
+            xml.attribute("format", legendInfo.getFormat());
+        }
+        if(legendInfo.getLegendUrl() != null) {
+            xml.attribute("xlink:href", legendInfo.getLegendUrl());
+        }
+        xml.endElement("LegendURL");
     }
 
     private void capabilityLayerOuter(XMLBuilder xml) throws IOException {

@@ -33,6 +33,8 @@ import org.custommonkey.xmlunit.XpathEngine;
 import org.custommonkey.xmlunit.Validator;
 import org.geowebcache.GeoWebCacheDispatcher;
 import org.geowebcache.config.XMLGridSubset;
+import org.geowebcache.config.legends.LegendInfo;
+import org.geowebcache.config.legends.LegendInfoBuilder;
 import org.geowebcache.config.meta.ServiceContact;
 import org.geowebcache.config.meta.ServiceInformation;
 import org.geowebcache.config.meta.ServiceProvider;
@@ -172,12 +174,13 @@ public class WMTSServiceTest extends TestCase {
             when(tileLayer.getParameterFilters()).thenReturn(Collections.singletonList(styles));
 
             // add legend info for style-b
-            TileLayer.LegendInfo legendInfo = TileLayer.createLegendInfo();
-            legendInfo.id = "styla-a-legend";
-            legendInfo.width = 125;
-            legendInfo.height = 130;
-            legendInfo.format = "image/png";
-            legendInfo.legendUrl = "https://some-url?some-parameter=value&another-parameter=value";
+            LegendInfo legendInfo = new LegendInfoBuilder()
+                    .withStyleName("styla-a-legend")
+                    .withWidth(125)
+                    .withHeight(130)
+                    .withFormat("image/png")
+                    .withCompleteUrl("https://some-url?some-parameter=value&another-parameter=value")
+                    .build();
             when(tileLayer.getLegendsInfo()).thenReturn(Collections.singletonMap("style-b", legendInfo));
 
             // add some layer metadata

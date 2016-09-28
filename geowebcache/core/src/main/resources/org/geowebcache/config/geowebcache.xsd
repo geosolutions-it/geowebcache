@@ -124,13 +124,13 @@
             </xs:documentation>
           </xs:annotation>
         </xs:element>
-        
+
         <xs:element name="blobStores" minOccurs="0" maxOccurs="1">
           <xs:annotation>
             <xs:documentation xml:lang="en">
               The list of  blob stores. BlobStores allow to define a storage mechanism and format, such as the legacy file system
               based storage, an Amazon S3 instance with a TMS-like key structure, etc; independently of where the tiles come from
-              in the TileLayer configuration. 
+              in the TileLayer configuration.
             </xs:documentation>
           </xs:annotation>
           <xs:complexType>
@@ -139,7 +139,7 @@
             </xs:sequence>
           </xs:complexType>
         </xs:element>
-        
+
         <xs:element name="gridSets" minOccurs="0">
           <xs:annotation>
             <xs:documentation xml:lang="en">
@@ -166,11 +166,11 @@
               <xs:element ref="gwc:arcgisLayer" />
             </xs:choice>
           </xs:complexType>
-        </xs:element>	        
+        </xs:element>
       	<xs:element name="fullWMS" type="xs:boolean" minOccurs="0">
            <xs:annotation>
              <xs:documentation xml:lang="en">
-		Parameter used for configuring full WMS requests for GeoWebCache. Setting this parameter to true enables full WMS requests. 
+		Parameter used for configuring full WMS requests for GeoWebCache. Setting this parameter to true enables full WMS requests.
              </xs:documentation>
            </xs:annotation>
         </xs:element>
@@ -213,17 +213,17 @@
       </xs:annotation>
     </xs:attribute>
   </xs:complexType>
-  
+
   <xs:element name="blobstore" type="gwc:AbstractBlobStore">
   </xs:element>
-  
+
   <xs:element name="FileBlobStore" substitutionGroup="gwc:blobstore">
     <xs:complexType>
       <xs:complexContent>
         <xs:extension base="gwc:AbstractBlobStore">
           <xs:sequence>
             <xs:element name="baseDirectory" type="xs:string" minOccurs="1" maxOccurs="1">
-              
+
             </xs:element>
             <xs:element name="fileSystemBlockSize" type="xs:positiveInteger" minOccurs="0" maxOccurs="1" nillable="true">
             </xs:element>
@@ -232,7 +232,7 @@
       </xs:complexContent>
     </xs:complexType>
   </xs:element>
-  
+
   <xs:element name="S3BlobStore" substitutionGroup="gwc:blobstore">
     <xs:complexType>
       <xs:complexContent>
@@ -276,14 +276,14 @@
               <xs:annotation>
                 <xs:documentation xml:lang="en">
                 The optional Windows domain name for configuring an NTLM proxy.
-                If you aren't using a Windows NTLM proxy, you do not need to set this field. 
+                If you aren't using a Windows NTLM proxy, you do not need to set this field.
                 </xs:documentation>
               </xs:annotation>
             </xs:element>
             <xs:element name="proxyWorkstation" type="xs:string" minOccurs="0" nillable="true">
               <xs:annotation>
                 <xs:documentation xml:lang="en">
-                The optional Windows workstation name for configuring NTLM proxy support. 
+                The optional Windows workstation name for configuring NTLM proxy support.
                 If you aren't using a Windows NTLM proxy, you do not need to set this field.
                 </xs:documentation>
               </xs:annotation>
@@ -373,7 +373,7 @@
           <xs:documentation xml:lang="en">
             List of formats to be supported for GetFeatureInfo. These must be known to
             GeoWebCache. Legal values are
-            text/plain, text/html, application/vnd.ogc.gml and application/json 
+            text/plain, text/html, application/vnd.ogc.gml and application/json
           </xs:documentation>
         </xs:annotation>
       </xs:element>
@@ -533,7 +533,7 @@
         <xs:annotation>
           <xs:documentation xml:lang="en">
             The QUERY_LAYERS value sent to the WMS backend server. This should
-            refer to one or more (comma separated) queryable layers. If omitted, 
+            refer to one or more (comma separated) queryable layers. If omitted,
             the wmsLayers will be used.
           </xs:documentation>
         </xs:annotation>
@@ -563,7 +563,7 @@
                 A list of URLs to backend servers than can render tiles for this
                 layer. They are used in a
                 round robin fashion for load balancing and automatic failover.
-    
+
                 The only time you can
                 ommit this element is if you expect the layer to be merged
                 with that from another source.
@@ -714,7 +714,14 @@
                 An indication of how many concurrent threads can simultaneously request tiles from this layer with
                 minimal thread contention. If not set defaults to 32. This property is deprecated and scheduled to
                 be removed in 1.4.0.
-              </xs:documentation> 
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element type="gwc:legendsType" name="legends" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation xml:lang="en">
+                Defines legends information for this layer styles.
+              </xs:documentation>
             </xs:annotation>
           </xs:element>
         </xs:sequence>
@@ -777,7 +784,7 @@
       <xs:element name="advertised" type="xs:boolean" minOccurs="0">
         <xs:annotation>
           <xs:documentation xml:lang="en">
-            Whether the layer is included in capabilities documents. Defaults 
+            Whether the layer is included in capabilities documents. Defaults
 	    to true.  When false the layer will not be included in capabilities
 	    documents but will otherwise work normally.
           </xs:documentation>
@@ -786,7 +793,7 @@
       <xs:element name="transientLayer" type="xs:boolean" minOccurs="0">
         <xs:annotation>
           <xs:documentation xml:lang="en">
-            Is the layer transient.  Defaults to false.  A transient layer's 
+            Is the layer transient.  Defaults to false.  A transient layer's
 	    configuration will not be persisted over restart/reload.  This does
 	    not affect the persistence of tiles.
           </xs:documentation>
@@ -2055,5 +2062,83 @@
         </xs:annotation>
       </xs:element>
     </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="legendType" mixed="true">
+    <xs:sequence>
+      <xs:element type="xs:integer" name="width" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            Legend width.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="xs:integer" name="height" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            Legend height.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="xs:string" name="format" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            Legend format.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="xs:string" name="url" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            URL that should be used to produce the legend get URL.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="xs:string" name="completeUrl" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            Complete URL that should be used as is.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="style" use="optional">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">
+          The style that corresponds to this legend.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="legendsType">
+    <xs:sequence>
+      <xs:element type="gwc:legendType" name="legend" maxOccurs="unbounded" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">
+            A style legend definition.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="defaultWidth">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">
+          Default width that should be used if no legend width is defined.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:string" name="defaultHeight">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">
+          Default height that should be used if no legend height is defined.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:string" name="defaultFormat">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">
+          Default format that should be used if no legend format is defined.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 </xs:schema>
