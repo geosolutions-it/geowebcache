@@ -17,22 +17,10 @@
  */
 package org.geowebcache.service.wmts;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geowebcache.config.legends.LegendInfo;
+import org.geowebcache.config.legends.LegendInfoBuilder;
 import org.geowebcache.config.meta.ServiceContact;
 import org.geowebcache.config.meta.ServiceInformation;
 import org.geowebcache.config.meta.ServiceProvider;
@@ -52,6 +40,21 @@ import org.geowebcache.mime.MimeType;
 import org.geowebcache.stats.RuntimeStats;
 import org.geowebcache.util.ServletUtils;
 import org.geowebcache.util.URLMangler;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class WMTSGetCapabilities {
     
@@ -479,10 +482,31 @@ public class WMTSGetCapabilities {
         	return;
         }
      }
-     
+
+    /**
+     * Helper method that get layer legends info by merging deprecated
+     * legends info objects with the new ones.
+     */
+     private Map<String, LegendInfo> getLegendsInfo(TileLayer layer) {
+         Map<String, LegendInfo> legendsInfo = new HashMap<>();
+         for (Map.Entry<String, TileLayer.LegendInfo> entry : layer.getLegendsInfo().entrySet()) {
+             // convert deprecated model to new model
+             legendsInfo.put(entry.getKey(), new LegendInfoBuilder()
+                     .withWidth(entry.getValue().width)
+                     .withHeight(entry.getValue().height)
+                     .withFormat(entry.getValue().format)
+                     .withCompleteUrl(entry.getValue().legendUrl)
+                     .withStyleName(entry.getKey())
+                     .build());
+         }
+         // add the new legend info model objects
+         legendsInfo.putAll(layer.getLayerLegendsInfo());
+         return legendsInfo;
+    }
+
      private void layerStyles(XMLBuilder xml, TileLayer layer, List<ParameterFilter> filters) throws IOException {
          String defStyle = layer.getStyles();
-         Map<String, LegendInfo> legendsInfo = layer.getLegendsInfo();
+         Map<String, LegendInfo> legendsInfo = getLegendsInfo(layer);
          if(filters == null) {
              xml.indentElement("Style");
              xml.attribute("isDefault", "true");
@@ -491,7 +515,7 @@ public class WMTSGetCapabilities {
              } else {
                  xml.simpleElement("ows:Identifier", TileLayer.encodeDimensionValue(defStyle), true);
              }
-             encodeStyleLegenGraphic(xml, legendsInfo.get(defStyle));
+             encodeStyleLegendGraphic(xml, legendsInfo.get(defStyle));
              xml.endElement("Style");
          } else {
              ParameterFilter stylesFilter = null;
@@ -523,7 +547,7 @@ public class WMTSGetCapabilities {
                          xml.attribute("isDefault", "true");
                      }
                      xml.simpleElement("ows:Identifier", TileLayer.encodeDimensionValue(value), true);
-                     encodeStyleLegenGraphic(xml, legendsInfo.get(value));
+                     encodeStyleLegendGraphic(xml, legendsInfo.get(value));
                      xml.endElement();
                  }
              } else {
@@ -532,25 +556,41 @@ public class WMTSGetCapabilities {
                 xml.attribute("isDefault", "true");
                 xml.simpleElement("ows:Identifier", "", true);
                 if (defStyle != null) {
-                    encodeStyleLegenGraphic(xml, legendsInfo.get(defStyle));
+                    encodeStyleLegendGraphic(xml, legendsInfo.get(defStyle));
                 }
                 xml.endElement();
              }
          }
      }
 
-    private void encodeStyleLegenGraphic(XMLBuilder xml, LegendInfo legendInfo) throws IOException {
+    /**
+     * XML encodes the provided legend information. If the provided information legend is NULL
+     * nothing is done.
+     */
+    private void encodeStyleLegendGraphic(XMLBuilder xml, LegendInfo legendInfo) throws IOException {
         if (legendInfo == null) {
+            // nothing to do
             return;
         }
         xml.indentElement("LegendURL");
-        xml.attribute("width", String.valueOf(legendInfo.getWidth()));
-        xml.attribute("height", String.valueOf(legendInfo.getHeight()));
-        if (legendInfo.getFormat() != null) {
-            xml.attribute("format", legendInfo.getFormat());
+        // validate mandatory attributes
+        checkNotNull(legendInfo.getFormat(), "Legend format is mandatory in WMTS.");
+        checkNotNull(legendInfo.getLegendUrl(), "Legend URL is mandatory in WMTS.");
+        // add mandatory attributes
+        xml.attribute("format", legendInfo.getFormat());
+        xml.attribute("xlink:href", legendInfo.getLegendUrl());
+        // add optional attributes
+        if (legendInfo.getWidth() != null) {
+            xml.attribute("width", String.valueOf(legendInfo.getWidth()));
         }
-        if(legendInfo.getLegendUrl() != null) {
-            xml.attribute("xlink:href", legendInfo.getLegendUrl());
+        if (legendInfo.getHeight() != null) {
+            xml.attribute("height", String.valueOf(legendInfo.getHeight()));
+        }
+        if (legendInfo.getMinScale() != null) {
+            xml.attribute("minScaleDenominator", String.valueOf(legendInfo.getMinScale()));
+        }
+        if (legendInfo.getMaxScale() != null) {
+            xml.attribute("maxScaleDenominator", String.valueOf(legendInfo.getMaxScale()));
         }
         xml.endElement("LegendURL");
     }

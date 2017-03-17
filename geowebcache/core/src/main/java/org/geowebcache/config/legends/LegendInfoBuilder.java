@@ -12,12 +12,13 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @author Nuno Oliveira, GeoSolutions S.A.S., Copyright 2016
+ * @author Nuno Oliveira, GeoSolutions S.A.S., Copyright 2017
  */
 package org.geowebcache.config.legends;
 
-import com.google.common.base.Preconditions;
 import org.geowebcache.util.ServletUtils;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Builder for {@link LegendInfo} instances.
@@ -37,6 +38,8 @@ public class LegendInfoBuilder {
     private String format;
     private String url;
     private String completeUrl;
+    private Double minScale;
+    private Double maxScale;
 
     public LegendInfoBuilder withLayerName(String layerName) {
         this.layerName = layerName;
@@ -93,20 +96,28 @@ public class LegendInfoBuilder {
         return this;
     }
 
+    public LegendInfoBuilder withMinScale(Double minScale) {
+        this.minScale = minScale;
+        return this;
+    }
+
+    public LegendInfoBuilder withMaxScale(Double maxScale) {
+        this.maxScale = maxScale;
+        return this;
+    }
+
     public LegendInfo build() {
         // let's see if we need to really on the default values for width, height and format
         Integer finalWidth = width == null ? defaultWidth : width;
         Integer finalHeight = height == null ? defaultHeight : height;
         String finalFormat = format == null ? defaultFormat : format;
-        // checking id we have correct values for width, height and format
-        Preconditions.checkNotNull(finalWidth, "A legend width is mandatory.");
-        Preconditions.checkNotNull(finalHeight, "A legend height is mandatory.");
-        Preconditions.checkNotNull(finalHeight, "A legend image format is mandatory.");
+        // checking mandatory format value
+        checkNotNull(finalFormat, "A legend image format is mandatory.");
         // default styles can have a NULL name
         String finalStyleName = styleName == null ? "" : styleName;
         // building the legend url
         String finalUrl = buildFinalUrl(finalStyleName, finalWidth, finalHeight, finalFormat);
-        return new LegendInfo(finalStyleName, finalWidth, finalHeight, finalFormat, finalUrl);
+        return new LegendInfo(finalStyleName, finalWidth, finalHeight, finalFormat, finalUrl, minScale, maxScale);
     }
 
     /**
@@ -118,9 +129,11 @@ public class LegendInfoBuilder {
             return completeUrl;
         }
         String finalUrl = url == null ? layerUrl : url;
-        // the legend url and layer name are mandatory
-        Preconditions.checkNotNull(finalUrl, "A legend url is mandatory.");
-        Preconditions.checkNotNull(layerName, "A layer name is mandatory.");
+        // check mandatory values
+        checkNotNull(finalWidth, "A legend width is mandatory.");
+        checkNotNull(finalHeight, "A legend height is mandatory.");
+        checkNotNull(finalUrl, "A legend url is mandatory.");
+        checkNotNull(layerName, "A layer name is mandatory.");
         return finalUrl + addQuoteMark(finalUrl) +
                 "service=WMS&request=GetLegendGraphic" +
                 "&format=" + finalFormat +

@@ -223,6 +223,8 @@
         <legend style="polygon">
           <width>20</width>
           <height>20</height>
+          <minScale>5000</minScale>
+          <maxScale>10000</maxScale>
         </legend>
         <legend style="raster">
           <width>20</width>

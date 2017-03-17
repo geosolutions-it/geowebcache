@@ -3,7 +3,7 @@
 Styles Legends
 ==============
 
-In WMTS and WMS services capabilities documents, styles can be associated with a ``<LegendURL>`` element that allows clients to retrieve an image representing the style legend. In the following example we can see the ``<LegendURL>`` element for ``rain`` style: 
+In WMTS and WMS services capabilities documents, styles can be associated with a ``<LegendURL>`` element that allows clients to retrieve an image representing the style legend. In the following example we can see the ``<LegendURL>`` element for ``rain`` style (WMS 1.1.0): 
 
 .. code-block:: xml
 
@@ -50,11 +50,13 @@ Both REST interface and ``geowebcache.xml`` configuration file use the same XML 
           <height>100</height>
           <format>image/gif</format>
           <completeUrl>http://localhost/polygon.gif</completeUrl>
+          <minScale>5000</minScale>
+          <maxScale>10000</maxScale>
         </legend>
       </legends>
     </wmsLayer>
 
-A valid legend configuration requires the following properties:
+The following properties can be used to configure a legend info:
 
 .. list-table::
    :widths: 10 90
@@ -71,30 +73,46 @@ A valid legend configuration requires the following properties:
    * - format
      - the image format of the legend image
    * - url
-     - the url that can be used to retrieve the legend image
+     - the URL that can be used to retrieve the legend image
+   * - minScale
+     - minimum scale denominator (inclusive) for which this legend image is valid (WMTS only)
+   * - maxScale
+     - maximum scale denominator (exclusive) for which this legend image is valid (WMTS only)
 
 This properties can be provided in several ways using ``<legends>`` and ``<legend>`` elements. Default values for properties ``width``, ``height`` and ``format`` can be configured using respectively attributes ``defaultWidth``, ``defaultHeight`` and ``defaultFormat`` of ``<legends>`` element. The default values can be overridden using elements ``width``, ``height`` and ``format`` inside ``<legend>`` elements.
 
 The ``style`` property value needs to be provided using ``style`` attribute of ``<legend>`` elements. The ``url`` property is a little more complex, if nothing is say the WMS layer base URL will be used to build a WMS ``GetLegendGraphic`` request. Element ``<url>`` can be used to provide another base URL, and this one will be used instead of the layer base URL. Element ``<completeUrl>`` can be used to provide an URL that should be used as is to retrieve the legend image.
 
-Looking at the example above, the legend configured for ``population`` style will produce the following legend url:
+Properties ``minScale`` and ``maxScale`` can be provided using the ``<legend>`` element, this properties will only be used by WMTS service.
+
+Looking at the example above, the legend configured for ``population`` style will produce the following legend URL for WMTS:
 
 .. code-block:: xml
 
   <LegendURL width="20" height="20" format="image/png" 
     xlink:href="http://localhost:8080/geoserver/topp/wms?service=WMS&amp;request=GetLegendGraphic&amp;format=image/png&amp;width=20&amp;height=20&amp;layer=topp%3Astates&amp;style=population"/>
 
-Note that the layer base URL was used as the base URL for the legend URL. In the example above a different base URL is provided for the legend associated with style ``pophatch`` using the ``<url>`` element. The produced legend URL will look like this:
+Note that the layer base URL was used as the base URL for the legend URL. In the example above a different base URL is provided for the legend associated with style ``pophatch`` using the ``<url>`` element. The produced legend URL will look like this for WMTS:
 
 .. code-block:: xml
 
-  <LegendURL width="20" height="20" format="image/png" 
+  <LegendURL width="20" height="20" format="image/png"
     xlink:href="http://localhost:8020/geowebcache/wms?service=WMS&amp;request=GetLegendGraphic&amp;format=image/jpeg&amp;width=20&amp;height=20&amp;layer=topp%3Astates&amp;style=pophatch"/>
 
-In some situations it may be useful to provide an already complete URL to the legend image (custom vendors parameters, a static image or different protocol). In the example above the legend URL for style ``polygon`` will use an already complete URL and will look like this:
+In some situations it may be useful to provide an already complete URL to the legend image (custom vendors parameters, a static image or different protocol). In the example above the legend URL for style ``polygon`` will use an already complete URL and will look like this for WMTS:
 
 .. code-block:: xml
 
-  <LegendURL width="50" height="100" format="image/gif" xlink:href="http://localhost/polygon.gif"/>
+  <LegendURL width="50" height="100" minScaleDenominator="5000" maxScaleDenominator="10000" 
+    format="image/gif" xlink:href="http://localhost/polygon.gif"/>
 
-When building a legend URL for a certain style if is not possible to retrieve the properties listed above an exception will be throw.
+In WMS the legend URL element for ``polygon`` style will look like this:
+
+.. code-block:: xml
+
+  <LegendURL width="50" height="100">
+      <Format>image/gif</Format>
+      <OnlineResource xlink:type="simple" xlink:href="http://localhost/polygon.gif"/>
+  </LegendURL>
+
+WMS and WMTS legend URL elements have a different structure and different mandatory elements. In WMTS only properties ``format`` and ``url`` are mandatory. In WMS properties ``width``, ``height``, ``format`` and ``url`` are mandatory.  

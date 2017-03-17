@@ -45,7 +45,6 @@ import org.geotools.data.wms.xml.Dimension;
 import org.geotools.data.wms.xml.Extent;
 import org.geotools.ows.ServiceException;
 import org.geowebcache.GeoWebCacheException;
-import org.geowebcache.config.legends.LegendInfo;
 import org.geowebcache.config.legends.LegendRawInfo;
 import org.geowebcache.config.legends.LegendsRawInfo;
 import org.geowebcache.config.meta.ServiceInformation;

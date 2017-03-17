@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @author Nuno Oliveira, GeoSolutions S.A.S., Copyright 2016
+ * @author Nuno Oliveira, GeoSolutions S.A.S., Copyright 2017
  */
 package org.geowebcache.config.legends;
 
@@ -43,6 +43,8 @@ public class LegendsRawInfoConverter implements Converter {
             encodeAttribute(writer, "format", legendRawInfo.getFormat());
             encodeAttribute(writer, "url", legendRawInfo.getUrl());
             encodeAttribute(writer, "completeUrl", legendRawInfo.getCompleteUrl());
+            encodeAttribute(writer, "minScale", legendRawInfo.getMinScale());
+            encodeAttribute(writer, "maxScale", legendRawInfo.getMaxScale());
             writer.endNode();
         }
     }
@@ -83,6 +85,16 @@ public class LegendsRawInfoConverter implements Converter {
     }
 
     /**
+     * Helper method that converts a non NULL string value to an double.
+     */
+    private Double toDouble(String rawValue) {
+        if (rawValue == null) {
+            return null;
+        }
+        return Double.valueOf(rawValue);
+    }
+
+    /**
      * Helper method that retrieves from the reader a legend raw information.
      */
     private LegendRawInfo parseLegendRawInfo(HierarchicalStreamReader reader) {
@@ -105,6 +117,12 @@ public class LegendsRawInfoConverter implements Converter {
                     break;
                 case "completeUrl":
                     legendRawInfo.setCompleteUrl(reader.getValue());
+                    break;
+                case "minScale":
+                    legendRawInfo.setMinScale(toDouble(reader.getValue()));
+                    break;
+                case "maxScale":
+                    legendRawInfo.setMaxScale(toDouble(reader.getValue()));
                     break;
             }
             reader.moveUp();

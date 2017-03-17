@@ -868,9 +868,9 @@ public class WMSLayer extends AbstractTileLayer implements ProxyLayer {
     }
 
     @Override
-    public Map<String, LegendInfo> getLegendsInfo() {
+    public Map<String, org.geowebcache.config.legends.LegendInfo> getLayerLegendsInfo() {
         String layerName = wmsLayers == null ? getName() : wmsLayers;
-        return legends == null ? super.getLegendsInfo() :
+        return legends == null ? super.getLayerLegendsInfo() :
                 legends.getLegendsInfo(layerName, wmsUrl != null && wmsUrl.length > 0 ? wmsUrl[0] : null);
     }
 }

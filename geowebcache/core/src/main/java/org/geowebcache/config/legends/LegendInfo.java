@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @author Nuno Oliveira, GeoSolutions S.A.S., Copyright 2016
+ * @author Nuno Oliveira, GeoSolutions S.A.S., Copyright 2017
  */
 package org.geowebcache.config.legends;
 
@@ -23,28 +23,33 @@ package org.geowebcache.config.legends;
 public class LegendInfo {
 
     private final String styleName;
-    private final int width;
-    private final int height;
+    private final Integer width;
+    private final Integer height;
     private final String format;
     private final String legendUrl;
+    private final Double minScale;
+    private final Double maxScale;
 
-    LegendInfo(String styleName, int width, int height, String format, String legendUrl) {
+    LegendInfo(String styleName, Integer width, Integer height,
+               String format, String legendUrl, Double minScale, Double maxScale) {
         this.styleName = styleName;
         this.width = width;
         this.height = height;
         this.format = format;
         this.legendUrl = legendUrl;
+        this.minScale = minScale;
+        this.maxScale = maxScale;
     }
 
     public String getStyleName() {
         return styleName;
     }
 
-    public int getWidth() {
+    public Integer getWidth() {
         return width;
     }
 
-    public int getHeight() {
+    public Integer getHeight() {
         return height;
     }
 
@@ -54,5 +59,13 @@ public class LegendInfo {
 
     public String getLegendUrl() {
         return legendUrl;
+    }
+
+    public Double getMinScale() {
+        return minScale;
+    }
+
+    public Double getMaxScale() {
+        return maxScale;
     }
 }

@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @author Nuno Oliveira, GeoSolutions S.A.S., Copyright 2016
+ * @author Nuno Oliveira, GeoSolutions S.A.S., Copyright 2017
  */
 package org.geowebcache.config.legends;
 
@@ -28,6 +28,8 @@ public class LegendRawInfo {
     private String format;
     private String url;
     private String completeUrl;
+    private Double minScale;
+    private Double maxScale;
 
     public String getStyle() {
         return style;
@@ -77,6 +79,22 @@ public class LegendRawInfo {
         this.completeUrl = completeUrl;
     }
 
+    public Double getMinScale() {
+        return minScale;
+    }
+
+    public void setMinScale(Double minScale) {
+        this.minScale = minScale;
+    }
+
+    public Double getMaxScale() {
+        return maxScale;
+    }
+
+    public void setMaxScale(Double maxScale) {
+        this.maxScale = maxScale;
+    }
+
     /**
      * Build the concrete legend information using the provided layer information and defaults values.
      */
@@ -93,20 +111,24 @@ public class LegendRawInfo {
                 .withFormat(format)
                 .withUrl(url)
                 .withCompleteUrl(completeUrl)
+                .withMinScale(minScale)
+                .withMaxScale(maxScale)
                 .build();
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        LegendRawInfo that = (LegendRawInfo) o;
+    public boolean equals(Object other) {
+        if (this == other) return true;
+        if (other == null || getClass() != other.getClass()) return false;
+        LegendRawInfo that = (LegendRawInfo) other;
         if (style != null ? !style.equals(that.style) : that.style != null) return false;
         if (width != null ? !width.equals(that.width) : that.width != null) return false;
         if (height != null ? !height.equals(that.height) : that.height != null) return false;
         if (format != null ? !format.equals(that.format) : that.format != null) return false;
         if (url != null ? !url.equals(that.url) : that.url != null) return false;
-        return completeUrl != null ? completeUrl.equals(that.completeUrl) : that.completeUrl == null;
+        if (completeUrl != null ? !completeUrl.equals(that.completeUrl) : that.completeUrl != null) return false;
+        if (minScale != null ? !minScale.equals(that.minScale) : that.minScale != null) return false;
+        return maxScale != null ? maxScale.equals(that.maxScale) : that.maxScale == null;
     }
 
     @Override
@@ -117,6 +139,8 @@ public class LegendRawInfo {
         result = 31 * result + (format != null ? format.hashCode() : 0);
         result = 31 * result + (url != null ? url.hashCode() : 0);
         result = 31 * result + (completeUrl != null ? completeUrl.hashCode() : 0);
+        result = 31 * result + (minScale != null ? minScale.hashCode() : 0);
+        result = 31 * result + (maxScale != null ? maxScale.hashCode() : 0);
         return result;
     }
 }
