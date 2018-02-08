@@ -724,13 +724,6 @@
               </xs:documentation>
             </xs:annotation>
           </xs:element>
-          <xs:element type="gwc:legendsType" name="legends" minOccurs="0">
-            <xs:annotation>
-              <xs:documentation xml:lang="en">
-                Defines legends information for this layer styles.
-              </xs:documentation>
-            </xs:annotation>
-          </xs:element>
         </xs:sequence>
      </xs:extension>
     </xs:complexContent>
