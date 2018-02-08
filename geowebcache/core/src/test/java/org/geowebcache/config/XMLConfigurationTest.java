@@ -190,6 +190,9 @@ public class XMLConfigurationTest {
         legendRawInfoA.setHeight(125);
         legendRawInfoA.setFormat("image/jpeg");
         legendRawInfoA.setUrl("http://url");
+        legendRawInfoA.setMinScale(5000D);
+        legendRawInfoA.setMaxScale(10000D);
+
         // legend with a complete url
         LegendRawInfo legendRawInfoB = new LegendRawInfo();
         legendRawInfoB.setStyle("point");

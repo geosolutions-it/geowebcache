@@ -56,6 +56,8 @@ import org.geowebcache.mime.MimeType;
 import org.geowebcache.util.ServletUtils;
 import org.geowebcache.util.URLMangler;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class WMSGetCapabilities {
 
     private static Log log = LogFactory.getLog(WMSGetCapabilities.class);
@@ -355,7 +357,7 @@ public class WMSGetCapabilities {
                 }
 
                 List<String> styles = getStyles(layer.getParameterFilters());
-                Map<String, LegendInfo> legendsInfo = layer.getLegendsInfo();
+                Map<String, LegendInfo> legendsInfo = layer.getLayerLegendsInfo();
                 for (String format : formats) {
                     for (String style : styles) {
                         try {
@@ -433,17 +435,26 @@ public class WMSGetCapabilities {
      */
     private void encodeStyleLegendGraphic(XMLBuilder xml, LegendInfo legendInfo) throws IOException {
         if (legendInfo == null) {
+            // nothing to do
             return;
         }
+        // validate legend info (this attributes are mandatory for WMS 1.1.0, 1.1.1 and 1.3.0)
+        checkNotNull(legendInfo.getWidth(), "Legend with is mandatory in WMS (1.1.0, 1.1.1 and 1.3.0).");
+        checkNotNull(legendInfo.getHeight(), "Legend height is mandatory in WMS (1.1.0, 1.1.1 and 1.3.0).");
+        checkNotNull(legendInfo.getFormat(), "Legend format is mandatory in WMS (1.1.0, 1.1.1 and 1.3.0).");
+        checkNotNull(legendInfo.getLegendUrl(), "Legend URL is mandatory in WMS (1.1.0, 1.1.1 and 1.3.0).");
         xml.indentElement("LegendURL");
+        // add with and height attributes
         xml.attribute("width", String.valueOf(legendInfo.getWidth()));
         xml.attribute("height", String.valueOf(legendInfo.getHeight()));
-        if (legendInfo.getFormat() != null) {
-            xml.attribute("format", legendInfo.getFormat());
-        }
-        if(legendInfo.getLegendUrl() != null) {
-            xml.attribute("xlink:href", legendInfo.getLegendUrl());
-        }
+        // add format element
+        xml.simpleElement("Format", legendInfo.getFormat(), true);
+        // add online resource element
+        xml.indentElement("OnlineResource");
+        xml.attribute("xlink:type", "simple");
+        xml.attribute("xlink:href", legendInfo.getLegendUrl());
+        xml.endElement("OnlineResource");
+        // close legend URL element
         xml.endElement("LegendURL");
     }
 

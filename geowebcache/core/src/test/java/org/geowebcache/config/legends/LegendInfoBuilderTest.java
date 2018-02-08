@@ -12,13 +12,15 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @author Nuno Oliveira, GeoSolutions S.A.S., Copyright 2016
+ * @author Nuno Oliveira, GeoSolutions S.A.S., Copyright 2017
  */
 package org.geowebcache.config.legends;
 
 import org.junit.Test;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.*;
 
 /**
@@ -39,6 +41,8 @@ public class LegendInfoBuilderTest {
         assertThat(legendInfo.getHeight(), is(100));
         assertThat(legendInfo.getFormat(), is("image/png"));
         assertThat(legendInfo.getStyleName(), is(""));
+        assertThat(legendInfo.getMinScale(), is(nullValue()));
+        assertThat(legendInfo.getMaxScale(), is(nullValue()));
         assertThat(legendInfo.getLegendUrl(), is("http://localhost:8080/geoserver?" +
                 "service=WMS&request=GetLegendGraphic&format=image/png&width=50&height=100&layer=layer1&style="));
     }
@@ -55,11 +59,15 @@ public class LegendInfoBuilderTest {
                 .withWidth(150)
                 .withHeight(200)
                 .withFormat("image/gif")
+                .withMinScale(1000.55)
+                .withMaxScale(2000.655)
                 .build();
         assertThat(legendInfo.getWidth(), is(150));
         assertThat(legendInfo.getHeight(), is(200));
         assertThat(legendInfo.getFormat(), is("image/gif"));
         assertThat(legendInfo.getStyleName(), is("style1"));
+        assertThat(legendInfo.getMinScale(), is(1000.55));
+        assertThat(legendInfo.getMaxScale(), is(2000.655));
         assertThat(legendInfo.getLegendUrl(), is("http://localhost:8080/geoserver?" +
                 "service=WMS&request=GetLegendGraphic&format=image/gif&width=150&height=200&layer=layer1&style=style1"));
     }
@@ -116,11 +124,15 @@ public class LegendInfoBuilderTest {
                 .withWidth(150)
                 .withHeight(200)
                 .withFormat("image/gif")
+                .withMinScale(50.5)
+                .withMaxScale(80.5)
                 .build();
         assertThat(legendInfo.getWidth(), is(150));
         assertThat(legendInfo.getHeight(), is(200));
         assertThat(legendInfo.getFormat(), is("image/gif"));
         assertThat(legendInfo.getStyleName(), is("style1"));
+        assertThat(legendInfo.getMinScale(), is(50.5));
+        assertThat(legendInfo.getMaxScale(), is(80.5));
         assertThat(legendInfo.getLegendUrl(), is("http://localhost:8080/geoserver?" +
                 "service=WMS&request=GetLegendGraphic&format=image/gif&width=150&height=200&layer=layer1&style=style1"));
     }

@@ -16,7 +16,6 @@ import org.geotools.data.wms.WebMapServer;
 import org.geowebcache.grid.GridSetBroker;
 import org.geowebcache.layer.TileLayer;
 import org.geowebcache.layer.wms.WMSLayer;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
