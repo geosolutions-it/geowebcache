@@ -1,5 +1,7 @@
 package org.geowebcache.seed;
 
+import java.util.Set;
+
 import org.geowebcache.config.Configuration;
 import org.geowebcache.storage.StorageBroker;
 import org.geowebcache.storage.StorageException;
@@ -16,8 +18,9 @@ public interface MassTruncateRequest {
      * 
      * @param sb The storage broker managing the cache
      * @param config The configuration storing information about the affected layers
+     * @param layers 
      * @return {@literal true} if successful, {@literal false} otherwise
      * @throws StorageException
      */
-    public boolean doTruncate(StorageBroker sb, Configuration config) throws StorageException;
+    public boolean doTruncate(StorageBroker sb, Configuration config, Set<String> layers) throws StorageException;
 }

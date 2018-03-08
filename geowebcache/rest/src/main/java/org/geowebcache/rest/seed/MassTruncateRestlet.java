@@ -23,7 +23,10 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.geowebcache.config.Configuration;
+import org.geowebcache.config.XMLConfiguration;
 import org.geowebcache.io.GeoWebCacheXStream;
+import org.geowebcache.layer.TileLayer;
+import org.geowebcache.layer.TileLayerDispatcher;
 import org.geowebcache.rest.RestletException;
 import org.geowebcache.seed.MassTruncateRequest;
 import org.geowebcache.seed.TruncateLayerRequest;
@@ -44,9 +47,15 @@ public class MassTruncateRestlet extends GWCSeedingRestlet {
     private StorageBroker broker;
     private Configuration config;
     
+    private TileLayerDispatcher tileLayerDispatcher;
+    
     static final Class<?>[] DEFAULT_REQUEST_TYPES = {TruncateLayerRequest.class};
 
     Class<?>[] requestTypes;
+    
+    public void setTileLayerDispatcher(TileLayerDispatcher tileLayerDispatcher) {
+    	this.tileLayerDispatcher = tileLayerDispatcher;
+    }
     
     /**
      * Responds with a simple XML document indicating the available MassRequest types.
@@ -84,7 +93,7 @@ public class MassTruncateRestlet extends GWCSeedingRestlet {
     protected void handleRequest(Request req, Response resp, Object obj) {
         MassTruncateRequest mtr = (MassTruncateRequest) obj;
         try {
-            if(!mtr.doTruncate(broker, config)) {
+            if(!mtr.doTruncate(broker, getConfiguration(), tileLayerDispatcher.getLayerNames())) {
                 throw new RestletException("Truncation failed", Status.SERVER_ERROR_INTERNAL);
             }
         } catch (IllegalArgumentException e) {
@@ -102,8 +111,17 @@ public class MassTruncateRestlet extends GWCSeedingRestlet {
         this.config = config;
     }
     
-    public Configuration getConfiguration() {
-        if(this.config==null) return this.xmlConfig;
+    
+    
+    @Override
+	public void setXmlConfig(XMLConfiguration xmlConfig) {
+		super.setXmlConfig(xmlConfig);
+	}
+
+	public Configuration getConfiguration() {
+        if(this.config==null) {
+        	return this.xmlConfig;
+        }
         return this.config;
     }
 

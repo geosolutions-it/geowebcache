@@ -1,5 +1,7 @@
 package org.geowebcache.seed;
 
+import java.util.Set;
+
 import org.geowebcache.config.Configuration;
 import org.geowebcache.storage.StorageBroker;
 import org.geowebcache.storage.StorageException;
@@ -16,8 +18,17 @@ public class TruncateLayerRequest implements MassTruncateRequest {
 
     String layerName;
 
-    public boolean doTruncate(StorageBroker sb, Configuration config) throws StorageException {
-        return sb.delete(layerName);
-    }
+	@Override
+	public boolean doTruncate(StorageBroker sb, Configuration config, Set<String> layers)
+			throws StorageException {
+		boolean truncated = sb.delete(layerName);
+   	 if (!truncated) {
+	    	 // did we hit a layer that has nothing on storage, or a layer that is not there?
+	    	 if(!layers.contains(layerName)) {
+	    		 throw new IllegalArgumentException("Could not find layer " + layerName);
+	    	 }
+   	 }
+   	 return true;
+	}
 
 }
