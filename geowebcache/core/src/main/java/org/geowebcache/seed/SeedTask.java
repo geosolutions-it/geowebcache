@@ -37,6 +37,9 @@ import org.geowebcache.util.Sleeper;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 /**
  * A GWCTask for seeding/reseeding the cache.
  *
@@ -62,6 +65,8 @@ class SeedTask extends GWCTask {
 
     private AtomicLong sharedFailureCounter;
     
+    private Authentication authentication;
+    
     @VisibleForTesting
     Sleeper sleeper = Thread::sleep;
     
@@ -80,6 +85,7 @@ class SeedTask extends GWCTask {
         this.tl = tl;
         this.reseed = reseed;
         this.doFilterUpdate = doFilterUpdate;
+        this.authentication = SecurityContextHolder.getContext().getAuthentication();
 
         tileFailureRetryCount = 0;
         tileFailureRetryWaitTime = 100;
@@ -99,6 +105,10 @@ class SeedTask extends GWCTask {
     // TODO: refactoring this into smaller functions might improve readability
     @Override
     protected void doActionInternal() throws GeoWebCacheException, InterruptedException {
+        if (this.authentication != null) {
+            SecurityContextHolder.getContext().setAuthentication(this.authentication);
+        }
+        
         super.state = GWCTask.STATE.RUNNING;
 
         // Lower the priority of the thread
@@ -313,6 +323,9 @@ class SeedTask extends GWCTask {
     protected void dispose() {
         if (tl instanceof WMSLayer) {
             ((WMSLayer) tl).cleanUpThreadLocals();
+        }
+        if (this.authentication != null) {
+            SecurityContextHolder.getContext().setAuthentication(null);
         }
     }
 }
