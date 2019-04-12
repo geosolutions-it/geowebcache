@@ -166,7 +166,7 @@ public class S3BlobStore implements BlobStore {
 
         final ByteArrayInputStream input = toByteArray(blob);
         PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, key, input,
-                objectMetadata).withCannedAcl(CannedAccessControlList.PublicRead);
+                objectMetadata).withCannedAcl(CannedAccessControlList.BucketOwnerFullControl);
 
         log.trace(log.isTraceEnabled() ? ("Storing " + key) : "");
         s3Ops.putObject(putObjectRequest);
