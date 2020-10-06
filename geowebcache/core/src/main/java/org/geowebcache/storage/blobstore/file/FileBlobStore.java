@@ -568,6 +568,7 @@ public class FileBlobStore implements BlobStore {
                 }
             }
 
+            persistParameterMap(stObj);
         } finally {
 
             if (temp != null) {
