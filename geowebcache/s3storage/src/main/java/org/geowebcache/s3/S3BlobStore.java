@@ -18,6 +18,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Objects.isNull;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.AccessControlList;
 import com.amazonaws.services.s3.model.BucketPolicy;
@@ -76,7 +77,7 @@ public class S3BlobStore implements BlobStore {
 
     private final BlobStoreListenerList listeners = new BlobStoreListenerList();
 
-    private AmazonS3Client conn;
+    private AmazonS3 conn;
 
     private final TMSKeyBuilder keyBuilder;
 
@@ -116,8 +117,7 @@ public class S3BlobStore implements BlobStore {
      * Validates the client connection by running some {@link S3ClientChecker}, returns the valiated
      * client on success, otherwise throws an exception
      */
-    protected AmazonS3Client validateClient(AmazonS3Client client, String bucketName)
-            throws StorageException {
+    protected AmazonS3 validateClient(AmazonS3 client, String bucketName) throws StorageException {
         List<S3ClientChecker> connectionCheckers =
                 Arrays.asList(this::checkBucketPolicy, this::checkAccessControlList);
         List<Exception> exceptions = new ArrayList<>();
@@ -142,14 +142,14 @@ public class S3BlobStore implements BlobStore {
 
     /** Implemented by lambdas testing an {@link AmazonS3Client} */
     interface S3ClientChecker {
-        void validate(AmazonS3Client client, String bucketName) throws Exception;
+        void validate(AmazonS3 client, String bucketName) throws Exception;
     }
 
     /**
      * Checks a {@link com.amazonaws.services.s3.AmazonS3Client} by getting the ACL out of the
      * bucket, as implemented by S3, Cohesity, but not, for example, by Minio.
      */
-    private void checkAccessControlList(AmazonS3Client client, String bucketName) throws Exception {
+    private void checkAccessControlList(AmazonS3 client, String bucketName) throws Exception {
         try {
             log.debug("Checking access rights to bucket " + bucketName);
             AccessControlList bucketAcl = client.getBucketAcl(bucketName);
@@ -164,7 +164,7 @@ public class S3BlobStore implements BlobStore {
      * Checks a {@link com.amazonaws.services.s3.AmazonS3Client} by getting the policy out of the
      * bucket, as implemented by S3, Minio, but not, for example, by Cohesity.
      */
-    private void checkBucketPolicy(AmazonS3Client client, String bucketName) throws Exception {
+    private void checkBucketPolicy(AmazonS3 client, String bucketName) throws Exception {
         try {
             log.debug("Checking policy for bucket " + bucketName);
             BucketPolicy bucketPol = client.getBucketPolicy(bucketName);
@@ -178,7 +178,7 @@ public class S3BlobStore implements BlobStore {
     @Override
     public void destroy() {
         this.shutDown = true;
-        AmazonS3Client conn = this.conn;
+        AmazonS3 conn = this.conn;
         this.conn = null;
         if (conn != null) {
             s3Ops.shutDown();

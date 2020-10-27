@@ -17,7 +17,6 @@ package org.geowebcache.s3;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.iterable.S3Objects;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest.KeyVersion;
@@ -46,7 +45,7 @@ public class TemporaryS3Folder extends ExternalResource {
 
     private String temporaryPrefix;
 
-    private AmazonS3Client s3;
+    private AmazonS3 s3;
 
     public TemporaryS3Folder(Properties properties) {
         this.properties = properties;

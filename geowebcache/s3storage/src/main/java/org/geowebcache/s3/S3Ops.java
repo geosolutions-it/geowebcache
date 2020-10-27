@@ -15,7 +15,6 @@
 package org.geowebcache.s3;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.iterable.S3Objects;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest;
@@ -57,7 +56,7 @@ import org.geowebcache.storage.StorageException;
 
 class S3Ops {
 
-    private final AmazonS3Client conn;
+    private final AmazonS3 conn;
 
     private final String bucketName;
 
@@ -69,8 +68,7 @@ class S3Ops {
 
     private Map<String, Long> pendingDeletesKeyTime = new ConcurrentHashMap<>();
 
-    public S3Ops(
-            AmazonS3Client conn, String bucketName, TMSKeyBuilder keyBuilder, LockProvider locks)
+    public S3Ops(AmazonS3 conn, String bucketName, TMSKeyBuilder keyBuilder, LockProvider locks)
             throws StorageException {
         this.conn = conn;
         this.bucketName = bucketName;

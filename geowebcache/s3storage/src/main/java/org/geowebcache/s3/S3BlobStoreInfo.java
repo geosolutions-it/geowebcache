@@ -21,7 +21,9 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.auth.*;
 import com.amazonaws.auth.AnonymousAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import javax.annotation.Nullable;
@@ -32,6 +34,7 @@ import org.geowebcache.layer.TileLayerDispatcher;
 import org.geowebcache.locks.LockProvider;
 import org.geowebcache.storage.BlobStore;
 import org.geowebcache.storage.StorageException;
+import org.h2.util.StringUtils;
 
 /** Plain old java object representing the configuration for an S3 blob store. */
 @SuppressWarnings("deprecation")
@@ -70,6 +73,8 @@ public class S3BlobStoreInfo extends BlobStoreInfo {
     private Boolean useGzip;
 
     private String endpoint;
+
+    private String region;
 
     public S3BlobStoreInfo() {
         super();
@@ -272,6 +277,25 @@ public class S3BlobStoreInfo extends BlobStoreInfo {
     }
 
     /**
+     * Returns the optional region endpoint to use for AWS.
+     *
+     * @return The region endpoint, if access is restricted by region.
+     */
+    @Nullable
+    public String getRegion() {
+        return region;
+    }
+
+    /**
+     * Sets the optional region endpoint to use for AWS.
+     *
+     * @param region The region endpoint to use for AWS.
+     */
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    /**
      * Checks access type
      *
      * @return public or private access
@@ -346,7 +370,7 @@ public class S3BlobStoreInfo extends BlobStoreInfo {
     }
 
     /** @return {@link AmazonS3Client} constructed from this {@link S3BlobStoreInfo}. */
-    public AmazonS3Client buildClient() {
+    public AmazonS3 buildClient() {
         ClientConfiguration clientConfig = new ClientConfiguration();
         if (null != useHTTPS) {
             clientConfig.setProtocol(useHTTPS ? Protocol.HTTPS : Protocol.HTTP);
@@ -366,14 +390,23 @@ public class S3BlobStoreInfo extends BlobStoreInfo {
             clientConfig.setUseGzip(useGzip);
         }
         log.debug("Initializing AWS S3 connection");
-        AmazonS3Client client = new AmazonS3Client(getCredentialsProvider(), clientConfig);
-        if (endpoint != null && !"".equals(endpoint)) {
-            S3ClientOptions s3ClientOptions = new S3ClientOptions();
-            s3ClientOptions.setPathStyleAccess(true);
+        AmazonS3ClientBuilder builder =
+                AmazonS3ClientBuilder.standard()
+                        .withCredentials(getCredentialsProvider())
+                        .withClientConfiguration(clientConfig);
+        if (!StringUtils.isNullOrEmpty(region)) {
+            builder = builder.withRegion(region);
+        } else {
+            builder.withForceGlobalBucketAccessEnabled(true);
+        }
+        AmazonS3 client = builder.build();
+        if (!StringUtils.isNullOrEmpty(endpoint)) {
+            S3ClientOptions s3ClientOptions =
+                    S3ClientOptions.builder().setPathStyleAccess(true).build();
             client.setS3ClientOptions(s3ClientOptions);
             client.setEndpoint(endpoint);
         }
-        if (!client.doesBucketExist(bucket)) {
+        if (!client.doesBucketExistV2(bucket)) {
             client.createBucket(bucket);
         }
         return client;
