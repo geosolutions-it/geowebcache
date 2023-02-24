@@ -75,8 +75,13 @@ public class SeedController {
         return seedService.getRunningLayerTasks(req, layer);
     }
 
+    @RequestMapping(value = "/seed/{layer}.xml", method = RequestMethod.GET)
+    public ResponseEntity<?> doGetXml(HttpServletRequest request, @PathVariable String layer) {
+        return formService.handleGet(request, layer);
+    }
+
     /** GET method for displaying the GeoWebCache UI form. */
-    @RequestMapping(value = "/seed/{layer}", method = RequestMethod.GET)
+    @RequestMapping(value = "/seed/{layer:.+}", method = RequestMethod.GET)
     public ResponseEntity<?> doFormGet(HttpServletRequest request, @PathVariable String layer) {
         return formService.handleGet(request, layer);
     }
