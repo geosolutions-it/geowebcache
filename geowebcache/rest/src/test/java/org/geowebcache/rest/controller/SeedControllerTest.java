@@ -14,6 +14,7 @@
  */
 package org.geowebcache.rest.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -25,6 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import javax.servlet.http.HttpServletRequest;
 import org.geowebcache.rest.service.FormService;
 import org.junit.Before;
 import org.junit.Test;
@@ -89,12 +91,32 @@ public class SeedControllerTest {
         String layerName = "test:mock.layer.name";
         // when(formService.handleFormPost(eq(layerName),
         // anyMap())).thenReturn(ResponseEntity.ok(null));
+        testGet(layerName);
+        testPost(layerName);
+    }
+
+    private void testPost(String layerName) throws Exception {
         doReturn(ResponseEntity.ok(null)).when(formService).handleFormPost(anyString(), anyMap());
+
         mockMvc.perform(
                         post("/rest/seed/{layer}", layerName)
                                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                                 .accept(MediaType.TEXT_XML))
                 .andExpect(status().isOk());
         verify(formService).handleFormPost(eq(layerName), anyMap());
+    }
+
+    private void testGet(String layerName) throws Exception {
+        doReturn(ResponseEntity.ok(null))
+                .when(formService)
+                .handleGet(any(HttpServletRequest.class), anyString());
+
+        mockMvc.perform(
+                        get("/rest/seed/{layer}", layerName)
+                                .contentType(MediaType.TEXT_PLAIN)
+                                .accept(MediaType.TEXT_HTML))
+                .andExpect(status().isOk());
+
+        verify(formService).handleGet(any(HttpServletRequest.class), eq(layerName));
     }
 }
