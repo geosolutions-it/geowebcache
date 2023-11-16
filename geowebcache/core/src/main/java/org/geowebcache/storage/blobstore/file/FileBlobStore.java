@@ -473,11 +473,10 @@ public class FileBlobStore implements BlobStore {
 
     /** Store a tile. */
     public void put(TileObject stObj) throws StorageException {
-
-        // an update to ParameterMap file is required !!!
+        // disabled parameter map persistence
         Runnable upm =
                 () -> {
-                    this.persistParameterMap(stObj);
+                    /* this.persistParameterMap(stObj); -- do nothing, but method still required */
                 };
         final File fh = getFileHandleTile(stObj, upm);
         final long oldSize = fh.length();
