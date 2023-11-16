@@ -39,15 +39,10 @@
 
   <distributionManagement>
     <repository>
-      <id>nexus</id>
-      <name>OSGeo GeoServer Release Repository</name>
-      <url>https://repo.osgeo.org/repository/Geoserver-releases/</url>
+      <uniqueVersion>false</uniqueVersion>
+      <id>geosolutions</id>
+      <url>ftp://demo.geo-solutions.it</url>
     </repository>
-    <snapshotRepository>
-      <id>nexus</id>
-      <name>OSGeo GeoServer Snapshot Repository</name>
-      <url>https://repo.osgeo.org/repository/geoserver-snapshots/</url>
-    </snapshotRepository>
   </distributionManagement>
 
   <properties>
@@ -513,6 +508,13 @@
   </repositories>
 
   <build>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-ftp</artifactId>
+        <version>1.0-beta-2</version>
+      </extension>
+    </extensions>
 
     <pluginManagement>
       <plugins>
