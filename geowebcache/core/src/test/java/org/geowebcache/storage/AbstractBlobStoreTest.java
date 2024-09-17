@@ -45,7 +45,6 @@ import org.geowebcache.io.ByteArrayResource;
 import org.geowebcache.layer.TileLayer;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /** Test to do */
@@ -773,7 +772,6 @@ public abstract class AbstractBlobStoreTest<TestClass extends BlobStore> {
 
     @SuppressWarnings("unchecked")
     @Test
-    @Ignore // we turned off parameter storage
     public void testParameterList() throws Exception {
         Map<String, String> params1 = Collections.singletonMap("testKey", "testValue1");
         Map<String, String> params2 = Collections.singletonMap("testKey", "testValue2");
@@ -974,7 +972,6 @@ public abstract class AbstractBlobStoreTest<TestClass extends BlobStore> {
     }
 
     @Test
-    @Ignore
     public void testPurgeOrphans() throws Exception {
         TileLayer layer = EasyMock.createMock("layer", TileLayer.class);
         EasyMock.expect(layer.getName()).andStubReturn("testLayer");
@@ -1139,7 +1136,6 @@ public abstract class AbstractBlobStoreTest<TestClass extends BlobStore> {
     }
 
     @Test
-    @Ignore // we removed parameter handling
     public void testPurgeOrphansWithDefault() throws Exception {
         TileLayer layer = EasyMock.createMock("layer", TileLayer.class);
         final String layerName = "testLayer";
