@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.geowebcache</groupId>
   <artifactId>geowebcache</artifactId>
-  <version>1.26.4</version>
+  <version>1.26.4-C321</version>
   <packaging>pom</packaging>
   <!-- GWC VERSION -->
   <name>geowebcache</name>
@@ -719,7 +719,7 @@
             <descriptor>release/war.xml</descriptor>
             <descriptor>release/doc.xml</descriptor>
           </descriptors>
-          <finalName>geowebcache-1.26.4</finalName>
+          <finalName>geowebcache-1.26.4-C321</finalName>
           <outputDirectory>${project.build.directory}/release</outputDirectory>
         </configuration>
       </plugin>
